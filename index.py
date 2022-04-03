@@ -1,6 +1,6 @@
 from cliffhanger.utils.log import initialize_logging
 
-initialize_logging("app_logs.log")
+initialize_logging("logs/app_logs.log")
 
 import dash
 from dash import dcc, html

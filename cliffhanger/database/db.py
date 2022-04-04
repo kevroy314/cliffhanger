@@ -13,19 +13,27 @@ class DB():
         # print(len(self.db))
 
     def new_session(self):
-        session_name = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
-        self.db[session_name] = Session(session_name)
-        return session_name
-
-    def new_user(self, username, session_name):
-        if username not in self.db[session_name].users:
-            new_user = User(username)
-            self.db[session_name].users[username] = new_user
-            return True
-        raise ValueError("Username taken in this session.")
-
-    def update_user(self, username, session_name, **kwargs):
-        self.db[session_name].users[username].update(**kwargs)
+        allowed_letters = string.ascii_lowercase.replace('i', '') \
+                                                .replace('l', '') \
+                                                .replace('o', '')
+        allowed_digits = string.digits.replace("0", "") \
+                                      .replace("1", "")
+        session_id = ''.join(random.choices(allowed_letters + allowed_digits, k=8))
+        self.db[session_id] = Session(session_id)
+        return session_id
 
     def close(self):
         self.db.close()
+
+data = DB("data/db.db")
+
+def new_session():
+    global data
+    return data.new_session()
+
+def get_session(session_id):
+    global data
+    return data.db[session_id]
+
+def update_session_contents(session):
+    data.db[session.session_id] = session

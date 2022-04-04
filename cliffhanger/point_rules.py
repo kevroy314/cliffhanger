@@ -1,0 +1,1 @@
+submit_new_bac_points = 20

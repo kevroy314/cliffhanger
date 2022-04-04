@@ -23,12 +23,24 @@ app.layout = html.Div([
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
+    layout_args = {}
+    if pathname.count('/') > 1:
+        # assume it's a data path
+        path_components = [x for x in pathname.split('/') if x]
+        pathname = '/'+path_components[0]
+        layout_args['path_meta'] = path_components[1:]
     for page in pages:
         if page is not None:
             if pathname == page.url:
-                return page.layout
+                return page.layout_function(**layout_args)
     return pages[0].layout
 
+for page in pages:
+    if page is None:
+        continue
+    for callback in page.callbacks:
+        ios_definitions, function_definition = callback
+        app.callback(*ios_definitions)(function_definition)
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", debug=True)

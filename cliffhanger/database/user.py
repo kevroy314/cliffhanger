@@ -20,4 +20,7 @@ class User():
         self.points += submit_new_bac_points
 
     def get_user_graph(self):
-        return px.line(x=self.bac_history_datetimes, y=self.bac_history)
+        if len(self.bac_history) > 0:
+            return px.line(x=self.bac_history_datetimes, y=self.bac_history, markers=True)
+        else:
+            return {}

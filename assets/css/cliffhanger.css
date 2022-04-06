@@ -1,0 +1,89 @@
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.page-title {
+  text-align: center;
+  padding-top: 15px;
+}
+
+.action-btn {
+  margin-top: 15px;
+  margin-bottom: 15px
+}
+
+.label-title {
+  text-align: center;
+  padding-top: 15px;
+}
+
+.text-input {
+  text-align: center;
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+.subtitle {
+  text-align: center;
+}
+
+.subtitle-tight {
+  text-align: center;
+  margin-top: -5px;
+}
+
+.session-id-display {
+  text-align: center;
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+.confirmation-text {
+  font-size: 12px;
+  text-align: center;
+  margin-top: 20px;
+  color: green;
+}
+
+.hide {
+  display: none;
+}
+
+.error-text {
+  text-align: center;
+  padding-top: 15px;
+  color: red;
+}
+
+.dropdown-divider {
+  color: white;
+}
+
+.dropdown-item {
+  background-color: white;
+  margin-top: 5px;
+  margin-right: 5px;
+}
+
+.modebar {
+  display: none !important;
+}
+
+#user-graph {
+  height: 30vh;
+  margin-left: -20px;
+}
+
+.party-table {
+  margin-left: -35px;
+  font-size: 10px;
+  padding-right: 0px;
+  padding-left: 0px;
+}
+
+.party-table-header-item {
+  font-size: 12px;
+  padding-right: 0px;
+  padding-left: 0px;
+}

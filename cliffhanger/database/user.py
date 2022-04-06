@@ -1,6 +1,7 @@
 from datetime import datetime
 from cliffhanger.point_rules import submit_new_bac_points
 import plotly.express as px
+import plotly.graph_objs as go
 
 class User():
     def __init__(self, username):
@@ -21,6 +22,10 @@ class User():
 
     def get_user_graph(self):
         if len(self.bac_history) > 0:
-            return px.line(x=self.bac_history_datetimes, y=self.bac_history, markers=True)
+            fig = px.line(x=self.bac_history_datetimes, y=self.bac_history, markers=True)
+            fig.update_layout(margin=dict(l=0, r=0, b=0, t=0,), xaxis=dict(title="Datetime"), yaxis=dict(title="BAC"))
+            return fig
         else:
-            return {}
+            layout = go.Layout(margin=go.layout.Margin(l=0, r=0, b=0, t=0), xaxis=dict(title="Datetime"), yaxis=dict(title="BAC"))
+            fig = dict(layout=layout)
+            return fig

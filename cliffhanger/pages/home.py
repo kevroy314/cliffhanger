@@ -7,22 +7,22 @@ def layout_function(**kwargs):
         dbc.Row(
             dbc.Col([
                 dbc.Row(
-                    html.H3('Welcome home!', style={"text-align": "center", "padding-top": "15px"}),
-                    justify="center"
+                    html.H2('Welcome home!', className="page-title"),
+                    justify="center", align="center"
                 ),
                 dbc.Row(
-                    dbc.Button("Join Session", color="primary", className="me-1", style={"margin-top": "15px", "margin-bottom": "15px"}, href="/joinsession"),
-                    justify="center"
+                    dbc.Button("Join Session", color="primary", className="me-1 action-btn", href="/joinsession"),
+                    justify="center", align="center"
                 ),
                 dbc.Row(
-                    dbc.Button("New Session", color="secondary", outline=True, className="me-1", style={"margin-top": "15px", "margin-bottom": "15px"}, href="/newsession"),
-                    justify="center"
-                )], width=3, align="center"
-            ), justify="center"
+                    dbc.Button("New Session", color="secondary", outline=True, className="me-1 action-btn", href="/newsession"),
+                    justify="center", align="center"
+                )], width=10, align="center"
+            ), justify="center", align="center", style={"height": "80vh"}
         )
     ])
     return layout
 
 callbacks = []
 
-page = Page('/', 'Home', layout_function, callbacks, True)
+page = Page('/', 'Home', layout_function, callbacks, False)

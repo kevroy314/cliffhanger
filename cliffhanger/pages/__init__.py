@@ -5,4 +5,4 @@ from cliffhanger.pages.home import page as home
 
 # First page is default page for bad url
 # None is interpreted as a divider
-pages = [home, None, newsession, joinsession, play]
+pages = [home, joinsession, newsession, play]

@@ -1,5 +1,5 @@
 from cliffhanger.utils.log import initialize_logging
-
+import os
 initialize_logging("logs/app_logs.log")
 
 import dash
@@ -10,9 +10,13 @@ from cliffhanger.pages import pages
 from cliffhanger.components.navbar import create_navbar
 
 
-app = dash.Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.LUX])
+app = dash.Dash(__name__,
+                suppress_callback_exceptions=True,
+                external_stylesheets=[dbc.themes.LUX, "/assets/css/cliffhanger.css"],
+                meta_tags=[
+                    {"name": "viewport", "content": "width=device-width, initial-scale=1"}
+                ])
 server = app.server
-app.config.suppress_callback_exceptions = True
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),

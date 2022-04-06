@@ -9,20 +9,24 @@ def layout_function(**kwargs):
         dbc.Row(
             dbc.Col([
                 dbc.Row(
-                    html.H3('Session Code', style={"text-align": "center", "padding-top": "15px"}),
+                    html.H2('New Session', className="page-title"),
                     justify="center"
                 ),
                 dbc.Row(
-                    [html.Sub('Share This With Participants', style={"text-align": "center"}), html.Br(), html.Sub('(not case sensitive)', style={"text-align": "center", "margin-top": "-5px"})],
+                    html.H3('Session Code', className="label-title"),
                     justify="center"
                 ),
-                dbc.Row(html.H4(session_id, style={"text-align": "center", "margin-top": "25px", "margin-bottom": "25px"}),
+                dbc.Row(
+                    [html.Sub('Share This With Participants', className="subtitle"), html.Br(), html.Sub('(not case sensitive)', className="subtitle-tight")],
+                    justify="center"
+                ),
+                dbc.Row(html.H4(session_id, className="session-id-display"),
                     justify="center"),
                 dbc.Row(
                     dbc.Button("Join Session", color="primary", className="me-1", href=f"/joinsession/{session_id}"),
                     justify="center"
                 ),
-            ], width=3),
+            ], width=10),
             justify="center"
         )
     ])

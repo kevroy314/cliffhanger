@@ -12,22 +12,26 @@ def layout_function(**kwargs):
         dbc.Row(
             dbc.Col([
                 dbc.Row(
-                    html.H4('Enter Your Username', style={"text-align": "center", "padding-top": "15px"}),
+                    html.H2('Join Session', className="page-title"),
                     justify="center"
                 ),
-                dbc.Row(dbc.Input(value=generate_slug(2), style={"text-align": "center", "margin-top": "25px", "margin-bottom": "25px"}, id="username"),
+                dbc.Row(
+                    html.H4('Enter Your Username', className="page-title"),
+                    justify="center"
+                ),
+                dbc.Row(dbc.Input(value=generate_slug(2), className="text-input", id="username"),
                     justify="center"),
                 dbc.Row(
-                    html.H4('Session ID', style={"text-align": "center", "padding-top": "15px"}),
+                    html.H4('Session ID', className="label-title"),
                     justify="center"
                 ),
-                dbc.Row(dbc.Input(value=session_id, style={"text-align": "center", "margin-top": "25px", "margin-bottom": "25px"}, id="session-id"),
+                dbc.Row(dbc.Input(value=session_id, className="text-input", id="session-id"),
                     justify="center"),
                 dbc.Row(
-                    dbc.Button("Join Session", color="primary", className="me-1", id="join-btn"),
+                    dbc.Button("Join Session", color="primary", className="me-1 action-btn", id="join-btn"),
                     justify="center"
                 ),
-            ], width=3),
+            ], width=10),
             justify="center"
         )
     ])

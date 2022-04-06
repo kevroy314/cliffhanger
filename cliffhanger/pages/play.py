@@ -9,7 +9,12 @@ from cliffhanger.database.db import get_session, update_session_contents
 
 def generate_user_table(session):
     table_header = [
-        html.Thead(html.Tr([html.Th("User"), html.Th("Latest BAC"), html.Th("Last Updated"), html.Th("Points"), html.Th("History")]))
+        html.Thead(html.Tr([
+            html.Th("User", className="party-table-header-item"), 
+            html.Th("Latest BAC", className="party-table-header-item"), 
+            html.Th("Last Updated", className="party-table-header-item"), 
+            html.Th("Points", className="party-table-header-item")
+        ]))
     ]
 
     rows = []
@@ -20,13 +25,12 @@ def generate_user_table(session):
             html.Td(user.username),
             html.Td(user.latest_bac),
             html.Td(user.last_update),
-            html.Td(str(user.points)),
-            html.Td(history)
+            html.Td(str(user.points))
         ])
         rows.append(row)
 
     table_body = [html.Tbody(rows)]
-    table = dbc.Table(table_header + table_body, bordered=True)
+    table = dbc.Table(table_header + table_body, bordered=True, className="party-table")
     return table
 
 def session_page(**kwargs):
@@ -37,15 +41,15 @@ def session_page(**kwargs):
             dbc.Row(
                 dbc.Col([
                     dbc.Row(
-                        html.H3(f'Welcome to the {session_id} party!', style={"text-align": "center", "padding-top": "15px"}),
+                        html.H2(f'Welcome to the {session_id} party!', className="page-title"),
                         justify="center"
                     ),
                     generate_user_table(session),
                     dbc.Row(
-                        dbc.Button("Go Home", color="primary", className="me-1", href="/"),
+                        dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href="/"), # TODO - make this link right
                         justify="center"
                     ),
-                ], width=3),
+                ], width=10),
                 justify="center"
             )
         ])
@@ -64,11 +68,11 @@ def user_page(**kwargs):
         dbc.Row(
             dbc.Col([
                 dbc.Row(
-                    html.H3(f'Welcome{back} {username}!', style={"text-align": "center", "padding-top": "15px"}),
+                    html.H3(f'Welcome{back} {username}!', className="page-title"),
                     justify="center"
                 ),
                 dbc.Row(
-                    html.Sub(f'You are in session {session_id}.', style={"text-align": "center", "margin-bottom": "20px"}),
+                    [html.Sub(f'You are in session {session_id}.', className="subtitle"), html.Br()],
                     justify="center"
                 ),
                 dbc.Row(
@@ -76,15 +80,15 @@ def user_page(**kwargs):
                     justify="center"
                 ),
                 dbc.Row(
-                    dbc.Button("Submit BAC", color="primary", className="me-1", id="submit-bac", style={"margin-bottom": "15px"}),
+                    dbc.Button("Submit BAC", color="primary", className="me-1 action-btn", id="submit-bac"),
                     justify="center"
                 ),
                 dbc.Row(
-                    dbc.Button("Go to Party Page", color="secondary", outline=True, className="me-1", href=f"/play/{session_id}"),
+                    dbc.Button("Go to Party Page", color="secondary", outline=True, className="me-1 action-btn", href=f"/play/{session_id}"),
                     justify="center"
                 ),
                 dbc.Row(
-                    html.P("", style={"font-size": "12px", "text-align": "center", "margin-top": "20px", "color": "green"}, id="confirmation-text"),
+                    html.P("", className="confirmation-text", id="confirmation-text"),
                     justify="center"
                 ),
                 dcc.Graph(id="user-graph"),
@@ -92,9 +96,10 @@ def user_page(**kwargs):
                         dbc.Input(value=username, id="play-username"),
                         dbc.Input(value=session_id, id="play-session-id")
                     ],
-                    style={"display": "none"}
+                    className="hide"
+                    
                 ),
-            ], width=3),
+            ], width=10),
             justify="center"
         )
     ])
@@ -105,14 +110,14 @@ def error_page(**kwargs):
         dbc.Row(
             dbc.Col([
                 dbc.Row(
-                    html.H3('There was an error, how did you get here? Go Home!', style={"text-align": "center", "padding-top": "15px", "color": "red"}),
+                    html.H3('There was an error, how did you get here? Go Home!', className="error-text"),
                     justify="center"
                 ),
                 dbc.Row(
                     dbc.Button("Go Home", color="primary", className="me-1", href="/"),
                     justify="center"
                 ),
-            ], width=3),
+            ], width=10),
             justify="center"
         )
     ])

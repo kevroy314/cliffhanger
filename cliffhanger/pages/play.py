@@ -1,18 +1,22 @@
+import logging
 from datetime import datetime
+from inspect import trace
+import traceback
 
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
 from cliffhanger.pages.page import Page
-from cliffhanger.database.db import get_session, update_session_contents
+from cliffhanger.database.session import Session
+from cliffhanger.database.user import User
 from cliffhanger.utils.formats import datetime_string_format
 
 def generate_user_table(session):
     table_header = [
         html.Thead(html.Tr([
             html.Th("User", className="party-table-header-item"), 
-            html.Th("Latest BAC", className="party-table-header-item"), 
+            html.Th("Last BAC", className="party-table-header-item"), 
             html.Th("Last Updated", className="party-table-header-item"), 
             html.Th("Points", className="party-table-header-item")
         ]))
@@ -21,7 +25,6 @@ def generate_user_table(session):
     rows = []
     for username in session.users:
         user = session.users[username]
-        history = str(user.bac_history).replace('[', '').replace(']', '')
         row = html.Tr([
             html.Td(user.username),
             html.Td(user.latest_bac),
@@ -36,7 +39,7 @@ def generate_user_table(session):
 
 def session_page(**kwargs):
     session_id = kwargs['path_meta'][0]
-    session = get_session(session_id)
+    session = Session.get_session(session_id)
 
     layout = html.Div([
             dbc.Row(
@@ -58,18 +61,21 @@ def session_page(**kwargs):
 
 def user_page(**kwargs):
     session_id, username = kwargs['path_meta']
-    session = get_session(session_id)
-    back = ""
-    try:
-        session.new_user(username)
-        update_session_contents(session)
-    except ValueError:
-        back = " back"
+    data = kwargs['user-preferences-data']
+    user = User(session_id, username)
+    secret_key = session_id+"_"+username+"_secret"
+    if secret_key not in data:
+        logging.warn("No secret key, disallowing user page loading")
+        return error_page(**kwargs) # Unauthorized
+    if data[secret_key] != user.user_secret:
+        logging.warn("Wrong secret key, disallowing user page loading")
+        return error_page(**kwargs) # Unauthorized
+
     layout = html.Div([
         dbc.Row(
             dbc.Col([
                 dbc.Row(
-                    html.H3(f'Welcome{back} {username}!', className="page-title"),
+                    html.H3(f'Welcome {username}!', className="page-title"),
                     justify="center"
                 ),
                 dbc.Row(
@@ -131,26 +137,35 @@ def layout_function(**kwargs):
         elif len(kwargs['path_meta']) == 2:
             return user_page(**kwargs)
         else:
+            logging.warn("Bad URL format, going to play error page")
             return error_page(**kwargs)
     except Exception as e:
-        print(e)
+        logging.warn("Unexpected error, going to play error page. Printing traceback")
+        traceback.print_exc()
         return error_page(**kwargs)
 
 
-def on_submit_new_bac(n_clicks, bac, username, session_id):
-    session = get_session(session_id)
+def on_submit_new_bac(n_clicks, bac, username, session_id, data):
+    user = User(session_id, username)
     if n_clicks is not None:
-        session.users[username].update_bac(bac)
-        graph = session.users[username].get_user_graph()
-        update_session_contents(session)
+        user = User(session_id, username)
+        secret_key = session_id+"_"+username+"_secret"
+        if secret_key not in data:
+            graph = user.get_user_graph()
+            return (["You are not authorized to do this."], graph)
+        if data[secret_key] != user.user_secret:
+            graph = user.get_user_graph()
+            return (["You are not authorized to do this."], graph)
         now = datetime.now()
+        user.update_bac(bac)
+        graph = user.get_user_graph()
         return (["Submitted Successfully!", html.Br(), f"({now.strftime(datetime_string_format)})"], graph)
     else:
-        graph = session.users[username].get_user_graph()
+        graph = user.get_user_graph()
         return ("", graph)
 
 callbacks = [
-    [[[Output("confirmation-text", "children"), Output("user-graph", "figure")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value")]], on_submit_new_bac]
+    [[[Output("confirmation-text", "children"), Output("user-graph", "figure")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value"), State("user-preferences", "data")]], on_submit_new_bac]
 ]
 
 page = Page('/play', 'Play', layout_function, callbacks, False)

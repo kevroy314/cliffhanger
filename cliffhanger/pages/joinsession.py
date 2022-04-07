@@ -57,6 +57,7 @@ def save_username_and_session_on_join(n_clicks, session_id, username, data, href
         else:
             data['usernames'] = list([session_id+"_"+username])
         session = Session.get_session(session_id)
+        data['most_recent_user'] = username
         try:
             user = session.new_user(username)
             data[session_id+"_"+username+"_secret"] = user.user_secret

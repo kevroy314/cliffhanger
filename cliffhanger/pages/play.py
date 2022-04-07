@@ -40,7 +40,7 @@ def generate_user_table(session):
 def session_page(**kwargs):
     session_id = kwargs['path_meta'][0]
     session = Session.get_session(session_id)
-
+    most_recent_user = kwargs['user-preferences-data']['most_recent_user']
     layout = html.Div([
             dbc.Row(
                 dbc.Col([
@@ -50,7 +50,7 @@ def session_page(**kwargs):
                     ),
                     generate_user_table(session),
                     dbc.Row(
-                        dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href="/"), # TODO - make this link right
+                        dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href=f"/play/{session_id}/{most_recent_user}"), # TODO - make this link right
                         justify="center"
                     ),
                 ], width=10),

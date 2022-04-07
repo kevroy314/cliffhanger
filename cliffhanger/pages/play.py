@@ -6,6 +6,7 @@ from dash.dependencies import Input, Output, State
 
 from cliffhanger.pages.page import Page
 from cliffhanger.database.db import get_session, update_session_contents
+from cliffhanger.utils.formats import datetime_string_format
 
 def generate_user_table(session):
     table_header = [
@@ -143,7 +144,7 @@ def on_submit_new_bac(n_clicks, bac, username, session_id):
         graph = session.users[username].get_user_graph()
         update_session_contents(session)
         now = datetime.now()
-        return (["Submitted Successfully!", html.Br(), f"({now.strftime('%m/%d/%Y, %-I:%M%p')})"], graph)
+        return (["Submitted Successfully!", html.Br(), f"({now.strftime(datetime_string_format)})"], graph)
     else:
         graph = session.users[username].get_user_graph()
         return ("", graph)

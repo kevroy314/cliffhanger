@@ -1,6 +1,12 @@
-from dataclasses import dataclass
-from cliffhanger.utils.log import initialize_logging
+from cliffhanger.utils.globals import data_location, log_location
 import os
+if not os.path.exists(data_location):
+    os.mkdir(data_location)
+if not os.path.exists(log_location):
+    os.mkdir(log_location)
+
+from cliffhanger.utils.log import initialize_logging
+
 initialize_logging("logs/app_logs.log")
 
 import dash
@@ -9,8 +15,6 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from cliffhanger.pages import pages
 from cliffhanger.components.navbar import create_navbar
-from cliffhanger.utils.globals import data_location, log_location
-import os
 
 app = dash.Dash(__name__,
                 suppress_callback_exceptions=True,
@@ -20,10 +24,6 @@ app = dash.Dash(__name__,
                 ])
 server = app.server
 
-if not os.path.exists(data_location):
-    os.mkdir(data_location)
-if not os.path.exists(log_location):
-    os.mkdir(log_location)
 
 app.layout = html.Div([
     dcc.Store(id='session-preferences', storage_type='local'),

@@ -86,3 +86,7 @@ html, body {
 .party-table-header-item {
   font-size: 12px;
 }
+
+.session-id-qr{
+  width: 20%;
+}

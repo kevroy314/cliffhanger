@@ -48,6 +48,12 @@ def session_page(**kwargs):
                         html.H2(f'Welcome to the {session_id} party!', className="page-title"),
                         justify="center"
                     ),
+                    dbc.Row(
+                        html.H4(f'Invite more people!', className="page-title"),
+                        justify="center"
+                    ),
+                    dbc.Row(html.Img(src=f"/assets/qrcodes/{session_id}.png", className="session-id-qr"), 
+                        justify="center"),
                     generate_user_table(session),
                     dbc.Row(
                         dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href=f"/play/{session_id}/{most_recent_user}"), # TODO - make this link right

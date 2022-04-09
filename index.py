@@ -4,6 +4,8 @@ if not os.path.exists(data_location):
     os.mkdir(data_location)
 if not os.path.exists(log_location):
     os.mkdir(log_location)
+if not os.path.exists("./assets/qrcodes"):
+    os.mkdir("./assets/qrcodes")
 
 from cliffhanger.utils.log import initialize_logging
 
@@ -61,15 +63,16 @@ app.clientside_callback(
 )
 
 @app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')], [State("user-preferences", "data")])
-def display_page(pathname, data):
+              [Input('url', 'pathname')], [State("user-preferences", "data"), State("url", "href")])
+def display_page(pathname, data, href):
     layout_args = {}
+    layout_args['href'] = href
+    layout_args['user-preferences-data'] = data
     if pathname.count('/') > 1:
         # assume it's a data path
         path_components = [x for x in pathname.split('/') if x]
         pathname = '/'+path_components[0]
         layout_args['path_meta'] = path_components[1:]
-        layout_args['user-preferences-data'] = data
     for page in pages:
         if page is not None:
             if pathname == page.url:

@@ -18,7 +18,14 @@ from cliffhanger.components.navbar import create_navbar
 
 app = dash.Dash(__name__,
                 suppress_callback_exceptions=True,
-                external_stylesheets=[dbc.themes.LUX, "/assets/css/cliffhanger.css"],
+                external_stylesheets=[
+                    dbc.themes.LUX,
+                    "/assets/css/cliffhanger.css",
+                    "/assets/components/countdown/countdown.css"
+                ],
+                external_scripts=[
+                    "/assets/components/countdown/countdown.js"
+                ],
                 meta_tags=[
                     {"name": "viewport", "content": "width=device-width, initial-scale=1"}
                 ])
@@ -26,7 +33,9 @@ server = app.server
 
 
 app.layout = html.Div([
-    dcc.Store(id='session-preferences', storage_type='local'),
+    html.Div(id="tmp"),
+    dcc.Interval(id="javascript-variable-crawler", interval=250),
+    dcc.Store(id='javascript-variables', storage_type='memory'),
     dcc.Store(id='user-preferences', storage_type='local'),
     dcc.Location(id='url', refresh=False),
     create_navbar(pages),
@@ -39,6 +48,17 @@ for page in pages:
     for callback in page.callbacks:
         ios_definitions, function_definition = callback
         app.callback(*ios_definitions)(function_definition)
+
+# get javascript variables and store app-wide
+app.clientside_callback(
+    """
+    function(){
+        return {'timeLeft': timeLeft};
+    }
+    """,
+    Output('javascript-variables', 'data'),
+    [Input('javascript-variable-crawler', 'n_intervals')],
+)
 
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')], [State("user-preferences", "data")])

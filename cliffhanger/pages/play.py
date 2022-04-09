@@ -83,6 +83,14 @@ def user_page(**kwargs):
                     justify="center"
                 ),
                 dbc.Row(
+                    [html.Sub(f'You currently have {user.points} points.', className="subtitle", id="points-display"), html.Br()],
+                    justify="center"
+                ),
+                dbc.Row(
+                    html.Div(id="countdown-timer", className="countdown-timer"),
+                    justify="center"
+                ),
+                dbc.Row(
                     dbc.Input(value="0.000", className="me-1", id="input-bac", type="number", min=0, max=1, step=0.001),
                     justify="center"
                 ),
@@ -145,27 +153,30 @@ def layout_function(**kwargs):
         return error_page(**kwargs)
 
 
-def on_submit_new_bac(n_clicks, bac, username, session_id, data):
+def on_submit_new_bac(n_clicks, bac, username, session_id, data, javascript_data):
     user = User(session_id, username)
+    timer_value = None
+    if "timeLeft" in javascript_data:
+        timer_value = javascript_data['timeLeft']
     if n_clicks is not None:
         user = User(session_id, username)
         secret_key = session_id+"_"+username+"_secret"
         if secret_key not in data:
             graph = user.get_user_graph()
-            return (["You are not authorized to do this."], graph)
+            return (["You are not authorized to do this."], graph, f'You currently have {user.points} points.')
         if data[secret_key] != user.user_secret:
             graph = user.get_user_graph()
-            return (["You are not authorized to do this."], graph)
+            return (["You are not authorized to do this."], graph, f'You currently have {user.points} points.')
         now = datetime.now()
-        user.update_bac(bac)
+        user.update_bac(bac, timer_value)
         graph = user.get_user_graph()
-        return (["Submitted Successfully!", html.Br(), f"({now.strftime(datetime_string_format)})"], graph)
+        return (["Submitted Successfully!", html.Br(), f"({now.strftime(datetime_string_format)})"], graph, f'You currently have {user.points} points.')
     else:
         graph = user.get_user_graph()
-        return ("", graph)
+        return ("", graph, f'You currently have {user.points} points.')
 
 callbacks = [
-    [[[Output("confirmation-text", "children"), Output("user-graph", "figure")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value"), State("user-preferences", "data")]], on_submit_new_bac]
+    [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("points-display", "children")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value"), State("user-preferences", "data"), State("javascript-variables", "data")]], on_submit_new_bac]
 ]
 
 page = Page('/play', 'Play', layout_function, callbacks, False)

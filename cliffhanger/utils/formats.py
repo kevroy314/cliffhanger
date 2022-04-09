@@ -1,1 +1,1 @@
-datetime_string_format = "%m/%d/%Y, %I:%M%p"
+datetime_string_format = "%m/%d/%Y, %I:%M:%S%p"

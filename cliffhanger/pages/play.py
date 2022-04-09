@@ -100,6 +100,22 @@ def user_page(**kwargs):
                     dbc.Input(value="0.000", className="me-1", id="input-bac", type="number", min=0, max=1, step=0.001),
                     justify="center"
                 ),
+                dbc.Row([
+                    dbc.Label("What did you drink?"),
+                    dbc.Checklist(
+                        options=[
+                            {"label": "Nothing", "value": 1},
+                            {"label": "Beer", "value": 2},
+                            {"label": "Wine", "value": 3},
+                            {"label": "Liquor (Drinks)", "value": 4},
+                            {"label": "Liquor (Shots)", "value": 5},
+                        ],
+                        value=[],
+                        id="drink-description-checklist",
+                        inline=True,
+                    )],
+                    justify="center"
+                ),
                 dbc.Row(
                     dbc.Button("Submit BAC", color="primary", className="me-1 action-btn", id="submit-bac"),
                     justify="center"
@@ -159,7 +175,7 @@ def layout_function(**kwargs):
         return error_page(**kwargs)
 
 
-def on_submit_new_bac(n_clicks, bac, username, session_id, data, javascript_data):
+def on_submit_new_bac(n_clicks, bac, username, session_id, data, javascript_data, drink_description_checklist):
     user = User(session_id, username)
     timer_value = None
     if "timeLeft" in javascript_data:
@@ -174,7 +190,7 @@ def on_submit_new_bac(n_clicks, bac, username, session_id, data, javascript_data
             graph = user.get_user_graph()
             return (["You are not authorized to do this."], graph, f'You currently have {user.points} points.')
         now = datetime.now()
-        user.update_bac(bac, timer_value)
+        user.update_bac(bac, timer_value, drink_description_checklist)
         graph = user.get_user_graph()
         return (["Submitted Successfully!", html.Br(), f"({now.strftime(datetime_string_format)})"], graph, f'You currently have {user.points} points.')
     else:
@@ -182,7 +198,7 @@ def on_submit_new_bac(n_clicks, bac, username, session_id, data, javascript_data
         return ("", graph, f'You currently have {user.points} points.')
 
 callbacks = [
-    [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("points-display", "children")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value"), State("user-preferences", "data"), State("javascript-variables", "data")]], on_submit_new_bac]
+    [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("points-display", "children")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value"), State("user-preferences", "data"), State("javascript-variables", "data"), State("drink-description-checklist", "value")]], on_submit_new_bac]
 ]
 
 page = Page('/play', 'Play', layout_function, callbacks, False)

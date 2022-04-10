@@ -1,0 +1,13 @@
+coolname==1.1.0
+dash==2.3.1
+dash-bootstrap-components>=1.1.0
+jupyter==1.0.0
+numpy==1.22.3
+pandas==1.4.2
+Pillow==9.1.0
+plotly==5.7.0
+pylint==2.13.5
+pytest==7.1.1
+qrcode==7.3.1
+scipy==1.8.0
+sqlitedict==2.0.0

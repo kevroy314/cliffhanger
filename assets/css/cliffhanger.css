@@ -95,3 +95,7 @@ html, body {
   position: absolute;
   margin-top: -50px;
 }
+
+.bac-input-text{
+  text-align: center;
+}

@@ -105,7 +105,7 @@ def user_page(**kwargs):
                     justify="center"
                 ),
                 dbc.Row(
-                    dbc.Input(value="0.000", className="me-1", id="input-bac", type="number", min=0, max=1, step=0.001),
+                    dbc.Input(value="0.000", className="me-1 bac-input-text", id="input-bac", type="number", min=0, max=1, step=0.001),
                     justify="center"
                 ),
                 dbc.Row([

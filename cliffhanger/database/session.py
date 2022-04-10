@@ -5,6 +5,8 @@ import string, random
 import os
 import pandas as pd
 import plotly.express as px
+import numpy as np
+from functools import reduce
 
 class Session():
     def __init__(self, session_id):
@@ -46,11 +48,17 @@ class Session():
     def create_session_graph(self):
         df = self.extract_data_snapshot()
         df = df.rename({'dt': 'Datetime', 'bac': 'BAC', 'user': "User"}, axis=1)
+        # Compute Average and make it's own things
         return px.line(df, x='Datetime', y='BAC', color='User')
     
     def create_session_score_graph(self):
         df = self.extract_data_snapshot()
         df = df.rename({'dt': 'Datetime', 'points': 'Points', 'user': "User"}, axis=1)
+        # Compute average and make it's own data entries
+        user_dfs = np.transpose(df.groupby('User'))[1]
+        # TODO Pick up here
+        df_merged = reduce(lambda  left, right: pd.merge(left, right, on=['Datetime'], how='outer'), user_dfs).fillna(method='ffill')
+        print(df_merged)
         return px.line(df, x='Datetime', y='Points', color='User')
 
     @staticmethod

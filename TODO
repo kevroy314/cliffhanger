@@ -1,5 +1,9 @@
+Bugs:
+timer state desyncs under some conditions
+mobile sizing needs assessment
+
 Core reqs:
-Group stats (line color according to drink stats - party average and individual players)
+add party-average lines to session plot
 
 bonus reqs:
 Pre-entry bet (where do you think you're at? where do you think other person will be at?)

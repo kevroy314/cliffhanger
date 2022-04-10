@@ -90,3 +90,8 @@ html, body {
 .session-id-qr{
   width: 20%;
 }
+
+.data-download-button{
+  position: absolute;
+  margin-top: -50px;
+}

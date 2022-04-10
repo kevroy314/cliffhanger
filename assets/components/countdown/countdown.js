@@ -68,13 +68,16 @@ setInterval(attempt_initialization, 500);
 
 previous_confirmation_text = ""
 function detect_server_reset_request(){
-  var confirmation_text = document.getElementById("confirmation-text").innerHTML;
-  if (confirmation_text) {
-    if (previous_confirmation_text != confirmation_text){
-      reset_counter();
-      play = 0;
+  var confirmation_text_element = document.getElementById("confirmation-text");
+  if (confirmation_text_element){
+    var confirmation_text = confirmation_text_element.innerHTML;
+    if (confirmation_text) {
+      if (previous_confirmation_text != confirmation_text){
+        reset_counter();
+        play = 0;
+      }
+      previous_confirmation_text = confirmation_text
     }
-    previous_confirmation_text = confirmation_text
   }
 }
 

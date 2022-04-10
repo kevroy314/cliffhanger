@@ -23,10 +23,8 @@ app = dash.Dash(__name__,
                 external_stylesheets=[
                     dbc.themes.LUX,
                     "/assets/css/cliffhanger.css",
-                    "/assets/components/countdown/countdown.css"
-                ],
-                external_scripts=[
-                    "/assets/components/countdown/countdown.js"
+                    "/assets/components/countdown/countdown.css",
+                    "https://use.fontawesome.com/releases/v6.1.1/css/all.css"
                 ],
                 meta_tags=[
                     {"name": "viewport", "content": "width=device-width, initial-scale=1"}
@@ -55,7 +53,10 @@ for page in pages:
 app.clientside_callback(
     """
     function(){
-        return {'timeLeft': timeLeft};
+        if (typeof variable !== 'undefined')
+            return {'timeLeft': timeLeft};
+        else
+            return {'timeLeft': 900};
     }
     """,
     Output('javascript-variables', 'data'),

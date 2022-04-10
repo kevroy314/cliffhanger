@@ -3,9 +3,12 @@ from datetime import datetime
 from inspect import trace
 import traceback
 
+import pandas as pd
+
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 
 from cliffhanger.pages.page import Page
 from cliffhanger.database.session import Session
@@ -54,7 +57,11 @@ def session_page(**kwargs):
                     ),
                     dbc.Row(html.Img(src=f"/assets/qrcodes/{session_id}.png", className="session-id-qr"), 
                         justify="center"),
+                    dbc.Button(html.I(className="fa fa-solid fa-download"), id="download-session-snapshop-btn", className="data-download-button", color="secondary", outline=True),
+                    dcc.Download(id="download-controller"),
                     generate_user_table(session),
+                    dcc.Graph(figure=session.create_session_graph()),
+                    dcc.Graph(figure=session.create_session_score_graph()),
                     dbc.Row(
                         dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href=f"/play/{session_id}/{most_recent_user}"), # TODO - make this link right
                         justify="center"
@@ -78,6 +85,7 @@ def user_page(**kwargs):
         return error_page(**kwargs) # Unauthorized
 
     layout = html.Div([
+        html.Script(src="/assets/components/countdown/countdown.js"),
         dbc.Row(
             dbc.Col([
                 dbc.Row(
@@ -177,10 +185,10 @@ def layout_function(**kwargs):
 
 def on_submit_new_bac(n_clicks, bac, username, session_id, data, javascript_data, drink_description_checklist):
     user = User(session_id, username)
-    timer_value = None
-    if "timeLeft" in javascript_data:
-        timer_value = javascript_data['timeLeft']
     if n_clicks is not None:
+        timer_value = None    
+        if "timeLeft" in javascript_data:
+            timer_value = javascript_data['timeLeft']
         user = User(session_id, username)
         secret_key = session_id+"_"+username+"_secret"
         if secret_key not in data:
@@ -197,8 +205,18 @@ def on_submit_new_bac(n_clicks, bac, username, session_id, data, javascript_data
         graph = user.get_user_graph()
         return ("", graph, f'You currently have {user.points} points.')
 
+def download_session_snapshop(n_clicks, data):
+    if n_clicks is not None:
+        session_id = data['most_recent_session']
+        datestr = datetime.now().strftime(datetime_string_format.replace('/', "-").replace(":", "-").replace(" ", "_"))
+        df = Session(session_id).extract_data_snapshot()
+        return dcc.send_data_frame(df.to_csv, f"{session_id}_{datestr}.csv")
+    else:
+        raise PreventUpdate()
+
 callbacks = [
-    [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("points-display", "children")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value"), State("user-preferences", "data"), State("javascript-variables", "data"), State("drink-description-checklist", "value")]], on_submit_new_bac]
+    [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("points-display", "children")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value"), State("user-preferences", "data"), State("javascript-variables", "data"), State("drink-description-checklist", "value")]], on_submit_new_bac],
+    [[Output("download-controller", "data"), [Input("download-session-snapshop-btn", "n_clicks")], [State("user-preferences", "data")]], download_session_snapshop],
 ]
 
 page = Page('/play', 'Play', layout_function, callbacks, False)

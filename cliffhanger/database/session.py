@@ -10,6 +10,7 @@ from functools import reduce
 
 class Session():
     def __init__(self, session_id):
+        session_id = session_id.lower()
         self.session_id = session_id
         self.session_db = SqliteDict(os.path.join(data_location, session_id), autocommit=True)
         self.users = {}
@@ -48,8 +49,20 @@ class Session():
     def create_session_graph(self):
         df = self.extract_data_snapshot()
         df = df.rename({'dt': 'Datetime', 'bac': 'BAC', 'user': "User"}, axis=1)
+        fig = px.line(df, x='Datetime', y='BAC', color='User')
+        fig.update_layout(
+                margin=dict(l=0, r=0, b=0, t=0),
+                legend=dict(
+                    title="User",
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="left",
+                    x=0
+                )
+            )
         # Compute Average and make it's own things
-        return px.line(df, x='Datetime', y='BAC', color='User')
+        return fig
     
     def create_session_score_graph(self):
         df = self.extract_data_snapshot()
@@ -59,7 +72,19 @@ class Session():
         # TODO Pick up here
         df_merged = reduce(lambda  left, right: pd.merge(left, right, on=['Datetime'], how='outer'), user_dfs).fillna(method='ffill')
         print(df_merged)
-        return px.line(df, x='Datetime', y='Points', color='User')
+        fig = px.line(df, x='Datetime', y='Points', color='User')
+        fig.update_layout(
+                margin=dict(l=0, r=0, b=0, t=0),
+                legend=dict(
+                    title="User",
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="left",
+                    x=0
+                )
+            )
+        return fig
 
     @staticmethod
     def create_session():

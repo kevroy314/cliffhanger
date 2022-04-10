@@ -11,6 +11,7 @@ import pandas as pd
 
 class User():
     def __init__(self, session_id, username):
+        session_id = session_id.lower()
         self.user_db = SqliteDict(os.path.join(data_location, session_id+"_"+username), autocommit=True)
         if 'user' not in self.user_db:
             self.username = username
@@ -96,7 +97,20 @@ class User():
 
             fig = px.scatter(x=xx, y=yy, color=cc,
                             color_discrete_map=drinks_color_lut)
-            fig.update_layout(margin=dict(l=0, r=0, b=0, t=0,), xaxis=dict(title="Datetime"), yaxis=dict(title="BAC"))
+            fig.update_layout(
+                margin=dict(l=0, r=0, b=0, t=0,),
+                xaxis=dict(title="Datetime"),
+                yaxis=dict(title="BAC"),
+                legend=dict(
+                    title="Alcohol Type",
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="left",
+                    x=0
+                ),
+                height=300,
+            )
             return fig
         else:
             layout = go.Layout(margin=go.layout.Margin(l=0, r=0, b=0, t=0), xaxis=dict(title="Datetime"), yaxis=dict(title="BAC"))

@@ -16,3 +16,5 @@ drinks_color_lut = {
     "Liquor (Drinks)": "#ADD8E6",
     "Liquor (Shots)": "#2364AA"
 }
+
+party_bac_failure_threshold = 0.08

@@ -1,12 +1,11 @@
 from cliffhanger.database.user import User
-from cliffhanger.utils.globals import data_location, drinks_cat_lut
+from cliffhanger.utils.globals import data_location, drinks_cat_lut, party_bac_failure_threshold
 from sqlitedict import SqliteDict
 import string, random
 import os
 import pandas as pd
 import plotly.express as px
-import numpy as np
-from functools import reduce
+import plotly.graph_objects as go
 
 class Session():
     def __init__(self, session_id):
@@ -48,6 +47,19 @@ class Session():
 
     def create_session_graph(self):
         df = self.extract_data_snapshot()
+
+        user_dfs = df.groupby('user')
+        mdf = pd.DataFrame()
+        mdf['dt'] = df['dt'].unique()
+        mdf = mdf.set_index('dt').sort_index()
+        for username, udf in user_dfs:
+            udf = udf.set_index("dt")
+            mdf[username+'_bac'] = udf['bac']
+        mdf = mdf.fillna(method="ffill").fillna(method="bfill")
+        mdf = mdf.mean(axis=1).reset_index()
+        mdf.columns = ["Datetime", "Party Average"]
+        mdf['Threshold'] = party_bac_failure_threshold
+
         df = df.rename({'dt': 'Datetime', 'bac': 'BAC', 'user': "User"}, axis=1)
         fig = px.line(df, x='Datetime', y='BAC', color='User')
         fig.update_layout(
@@ -61,17 +73,28 @@ class Session():
                     x=0
                 )
             )
-        # Compute Average and make it's own things
+        fig.add_trace(go.Scatter(x=mdf['Datetime'], y=mdf['Party Average'], name='Party Average',
+                                line=dict(color='rgba(85, 111, 230, 0.5)', width=4, dash='dot'), mode='lines'))
+        fig.add_trace(go.Scatter(x=mdf['Datetime'], y=mdf['Threshold'], name='Failure Threshold',
+                                line=dict(color='rgba(255, 25, 0, 0.2)', width=4, dash='dash'), mode='lines'))
         return fig
     
     def create_session_score_graph(self):
         df = self.extract_data_snapshot()
+
+        user_dfs = df.groupby('user')
+        mdf = pd.DataFrame()
+        mdf['dt'] = df['dt'].unique()
+        mdf = mdf.set_index('dt').sort_index()
+        for username, udf in user_dfs:
+            udf = udf.set_index("dt")
+            mdf[username+'_points'] = udf['points']
+        mdf = mdf.fillna(method="ffill").fillna(method="bfill")
+        mdf = mdf.mean(axis=1).reset_index()
+        mdf.columns = ["Datetime", "Party Average"]
+
         df = df.rename({'dt': 'Datetime', 'points': 'Points', 'user': "User"}, axis=1)
-        # Compute average and make it's own data entries
-        user_dfs = np.transpose(df.groupby('User'))[1]
-        # TODO Pick up here
-        df_merged = reduce(lambda  left, right: pd.merge(left, right, on=['Datetime'], how='outer'), user_dfs).fillna(method='ffill')
-        print(df_merged)
+
         fig = px.line(df, x='Datetime', y='Points', color='User')
         fig.update_layout(
                 margin=dict(l=0, r=0, b=0, t=0),
@@ -84,6 +107,8 @@ class Session():
                     x=0
                 )
             )
+        fig.add_trace(go.Scatter(x=mdf['Datetime'], y=mdf['Party Average'], name='Party Average',
+                                line=dict(color='rgba(85, 111, 230, 0.5)', width=4, dash='dot'), mode='lines'))
         return fig
 
     @staticmethod

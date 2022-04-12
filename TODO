@@ -1,9 +1,6 @@
 Bugs:
 timer state desyncs under some conditions - also timer object doesn't always load - maybe port some to dash?
 
-Core reqs:
-add party-average lines to session plot
-
 bonus reqs:
 Pre-entry bet (where do you think you're at? where do you think other person will be at?)
 Pre-party update bet (where do you think we're all at?)

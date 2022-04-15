@@ -1,5 +1,12 @@
 Bugs:
 timer state desyncs under some conditions - also timer object doesn't always load - maybe port some to dash?
+Names can be too long and screw up subtitle rendering?
+First point should appear somehow
+Iphones fail
+Pause should fade on timer not hover/active
+Server errors should prompt for refresh
+Rules page should display when you start
+
 
 bonus reqs:
 Pre-entry bet (where do you think you're at? where do you think other person will be at?)

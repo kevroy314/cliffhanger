@@ -75,13 +75,74 @@ def bets_party_current_bets(session_id):
     return table
 
 def bets_user_components(session_id, username):
+    player_bet_modal = html.Div(
+        [
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Place Player Bet")),
+                    dbc.ModalBody("Wow this thing takes up a lot of space..."),
+                    dbc.Button("Place Bet", id="player-bet-place-btn")
+                ],
+                id="player-bet-modal",
+                fullscreen=True,
+                is_open=False
+            ),
+        ]
+    )
+    party_bet_modal = html.Div(
+        [
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Place Party Bet")),
+                    dbc.ModalBody("Wow this thing takes up a lot of space..."),
+                    dbc.Button("Place Bet", id="party-bet-place-btn")
+                ],
+                id="party-bet-modal",
+                fullscreen=True,
+                is_open=False
+            ),
+        ]
+    )
     return dbc.Row([
         dbc.Col(dbc.Button("Player Bet", id="player-bet-btn", className="menu-btn")),
         dbc.Col(dbc.Button("Party Bet", id="party-bet-btn", className="menu-btn")),
-        dbc.Row(bets_user_current_bets(session_id, username))
+        dbc.Row(bets_user_current_bets(session_id, username)),
+        player_bet_modal,
+        party_bet_modal
     ], style={"padding-bottom": "5px"})
 
 def bets_session_components(session_id):
     return bets_party_current_bets(session_id)
 
-bets_callbacks = []
+def player_bet(n_clicks_open, n_clicks_place, is_open):
+    if n_clicks_open is None:
+        return False
+    if n_clicks_open > 0 and (not is_open):
+        # Open was clicked
+        return True
+    if n_clicks_place > 0 and is_open:
+        print("place player bet")
+        # Place bet was clicked
+        return False
+
+def party_bet(n_clicks_open, n_clicks_place, is_open):
+    if n_clicks_open is None:
+        return False
+    if n_clicks_open > 0 and (not is_open):
+        # Open was clicked
+        return True
+    if n_clicks_place > 0 and is_open:
+        print("place party bet")
+        # Place bet was clicked
+        return False
+
+bets_callbacks = [
+    [[Output("player-bet-modal", "is_open"),
+     [Input("player-bet-btn", "n_clicks"), Input("player-bet-place-btn", "n_clicks")],
+     [State("player-bet-modal", "is_open")]],
+     player_bet],
+    [[Output("party-bet-modal", "is_open"),
+     [Input("party-bet-btn", "n_clicks"), Input("party-bet-place-btn", "n_clicks")],
+     [State("party-bet-modal", "is_open")]],
+     party_bet],
+]

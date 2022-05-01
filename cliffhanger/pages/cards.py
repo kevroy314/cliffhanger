@@ -6,16 +6,56 @@ def cards_user_components(session_id, username):
     # TODO: Get data from database as needed
     n_points = 123
     n_cards = 3
-    n_cards_played_on_you = 1
+    n_cards_played_on_you = 0
+
+    store = dbc.Carousel(
+        items=[
+            {
+                "key": "1",
+                "src": "/assets/images/level-1.png",
+                "header": "Level 1 Cards",
+                "caption": "Cost: 100 points",
+            },
+            {
+                "key": "2",
+                "src": "/assets/images/level-2.png",
+                "header": "Level 2 Cards",
+                "caption": "Cost: 200 points",
+            },
+            {
+                "key": "3",
+                "src": "/assets/images/level-3.png",
+                "header": "Level 3 Cards",
+                "caption": "Cost: 300 points",
+            },
+        ]
+    )
+
+    inventory = dbc.Carousel(
+        items=[
+            {
+                "key": "1",
+                "src": "/assets/images/output.png",
+            },
+        ]
+    )
+
+    resolve_inventory = dbc.Carousel(
+        items=[
+            {
+                "key": "1",
+                "src": "/assets/images/output.png",
+            },
+        ]
+    )
 
     buy_card_modal = html.Div(
         [
             dbc.Modal(
                 [
-                    dbc.ModalHeader(dbc.ModalTitle("Buy a Card")),
-                    dbc.ModalBody("Wow this thing takes up a lot of space..."),
+                    dbc.ModalHeader(dbc.ModalTitle("Select Card")),
+                    dbc.ModalBody(store),
                     dbc.Button("Buy Card", id="buy-card-btn")
-                    # TODO: Add store
                 ],
                 id="buy-card-modal",
                 fullscreen=True,
@@ -29,9 +69,8 @@ def cards_user_components(session_id, username):
             dbc.Modal(
                 [
                     dbc.ModalHeader(dbc.ModalTitle("Play a Card")),
-                    dbc.ModalBody("Wow this thing takes up a lot of space..."),
+                    dbc.ModalBody(inventory),
                     dbc.Button("Play Card", id="play-card-btn")
-                    # TODO: Add inventory management
                 ],
                 id="play-card-modal",
                 fullscreen=True,
@@ -45,9 +84,8 @@ def cards_user_components(session_id, username):
             dbc.Modal(
                 [
                     dbc.ModalHeader(dbc.ModalTitle("Resolve Cards")),
-                    dbc.ModalBody("Wow this thing takes up a lot of space..."),
+                    dbc.ModalBody(resolve_inventory),
                     dbc.Button("Done", id="resolve-card-btn")
-                    # TODO: Add card resolution ui
                 ],
                 id="resolve-card-modal",
                 fullscreen=True,
@@ -93,6 +131,7 @@ def buy_card(n_clicks_open, n_clicks_place, is_open):
     if n_clicks_place > 0 and is_open:
         print("buy card")
         # TODO: Add card buy logic
+        # TODO: Use carflip.html visualization to reveal card when bought
         return False
 
 def resolve_card(n_clicks_open, n_clicks_place, is_open):
@@ -104,6 +143,7 @@ def resolve_card(n_clicks_open, n_clicks_place, is_open):
     if n_clicks_place > 0 and is_open:
         print("resolve card")
         # TODO: Add card resolve logic
+        # TODO: Use carflip.html visualization to reveal card when opened
         return False
 
 cards_callbacks = [

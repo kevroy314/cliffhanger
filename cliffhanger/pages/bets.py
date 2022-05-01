@@ -76,7 +76,7 @@ def bets_party_current_bets(session_id):
 
 def bets_user_components(session_id, username):
     # TODO: Get data from database as needed
-    n_cards_played_on_you = 1
+    n_cards_played_on_you = 0
 
     player_bet_modal = html.Div(
         [

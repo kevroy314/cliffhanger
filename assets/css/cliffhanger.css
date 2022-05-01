@@ -99,3 +99,12 @@ html, body {
 .bac-input-text{
   text-align: center;
 }
+
+.rule-item {
+  color: black;
+  font-weight: bold;
+}
+
+.menu-btn {
+  width: 100%;
+}

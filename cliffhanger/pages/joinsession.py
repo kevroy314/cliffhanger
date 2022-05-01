@@ -6,6 +6,12 @@ from coolname import generate_slug
 from cliffhanger.database.session import Session
 from dash.exceptions import PreventUpdate
 
+def get_name(maxLength=20):
+    name = generate_slug(2)
+    while len(name) > maxLength:
+        name = generate_slug(2)
+    return name
+
 def layout_function(**kwargs):
     session_id = ""
     if 'path_meta' in kwargs and len(kwargs['path_meta'])>=1:
@@ -21,7 +27,7 @@ def layout_function(**kwargs):
                     html.H4('Enter Your Username', className="page-title"),
                     justify="center"
                 ),
-                dbc.Row(dbc.Input(value=generate_slug(2), className="text-input", id="username"),
+                dbc.Row(dbc.Input(value=get_name(maxLength=20), className="text-input", maxLength=20, id="username"),
                     justify="center"),
                 dbc.Row(
                     html.H4('Session ID', className="label-title"),

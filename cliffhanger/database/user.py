@@ -97,10 +97,17 @@ class User():
 
             fig = px.scatter(x=xx, y=yy, color=cc,
                             color_discrete_map=drinks_color_lut)
-            fig.update_layout(
+        elif len(self.bac_history) == 1:
+            fig = px.scatter(x=self.bac_history_datetimes, y=self.bac_history, 
+                            color_discrete_map=drinks_color_lut)
+        else:
+            fig = go.Figure()
+        fig.update_layout(
                 margin=dict(l=0, r=0, b=0, t=0,),
                 xaxis=dict(title="Datetime"),
                 yaxis=dict(title="BAC"),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
                 legend=dict(
                     title="Alcohol Type",
                     orientation="h",
@@ -111,8 +118,4 @@ class User():
                 ),
                 height=300,
             )
-            return fig
-        else:
-            layout = go.Layout(margin=go.layout.Margin(l=0, r=0, b=0, t=0), xaxis=dict(title="Datetime"), yaxis=dict(title="BAC"))
-            fig = dict(layout=layout)
-            return fig
+        return fig

@@ -15,6 +15,12 @@ from cliffhanger.database.session import Session
 from cliffhanger.database.user import User
 from cliffhanger.utils.formats import datetime_string_format
 
+from cliffhanger.pages.bets import bets_user_components, \
+                                   bets_session_components, \
+                                   bets_callbacks
+from cliffhanger.pages.cards import cards_user_components, \
+                                    cards_callbacks
+
 def generate_user_table(session):
     table_header = [
         html.Thead(html.Tr([
@@ -37,7 +43,7 @@ def generate_user_table(session):
         rows.append(row)
 
     table_body = [html.Tbody(rows)]
-    table = dbc.Table(table_header + table_body, bordered=True, className="party-table")
+    table = dbc.Row([html.H4("Party Status", style={"padding-top": "10px"}), dbc.Table(table_header + table_body, bordered=True, className="party-table")])
     return table
 
 def session_page(**kwargs):
@@ -60,6 +66,7 @@ def session_page(**kwargs):
                     dbc.Button(html.I(className="fa fa-solid fa-download"), id="download-session-snapshop-btn", className="data-download-button", color="secondary", outline=True),
                     dcc.Download(id="download-controller"),
                     generate_user_table(session),
+                    bets_session_components(session_id),
                     dcc.Graph(figure=session.create_session_graph()),
                     dcc.Graph(figure=session.create_session_score_graph()),
                     dbc.Row(
@@ -128,6 +135,8 @@ def user_page(**kwargs):
                     dbc.Button("Submit BAC", color="primary", className="me-1 action-btn", id="submit-bac"),
                     justify="center"
                 ),
+                bets_user_components(session_id, username),
+                cards_user_components(session_id, username),
                 dbc.Row(
                     dbc.Button("Go to Party Page", color="secondary", outline=True, className="me-1 action-btn", href=f"/play/{session_id}"),
                     justify="center"
@@ -217,6 +226,6 @@ def download_session_snapshop(n_clicks, data):
 callbacks = [
     [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("points-display", "children")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value"), State("user-preferences", "data"), State("javascript-variables", "data"), State("drink-description-checklist", "value")]], on_submit_new_bac],
     [[Output("download-controller", "data"), [Input("download-session-snapshop-btn", "n_clicks")], [State("user-preferences", "data")]], download_session_snapshop],
-]
+] + bets_callbacks + cards_callbacks
 
 page = Page('/play', 'Play', layout_function, callbacks, False)

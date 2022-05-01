@@ -31,9 +31,7 @@ app = dash.Dash(__name__,
                 ])
 server = app.server
 
-
 app.layout = html.Div([
-    html.Div(id="tmp"),
     dcc.Interval(id="javascript-variable-crawler", interval=250),
     dcc.Store(id='javascript-variables', storage_type='memory'),
     dcc.Store(id='user-preferences', storage_type='local'),
@@ -63,7 +61,7 @@ app.clientside_callback(
     [Input('javascript-variable-crawler', 'n_intervals')],
 )
 
-@app.callback(Output('page-content', 'children'),
+@app.callback(Output('page-content', 'children'), 
               [Input('url', 'pathname')], [State("user-preferences", "data"), State("url", "href")])
 def display_page(pathname, data, href):
     layout_args = {}

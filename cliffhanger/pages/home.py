@@ -1,9 +1,27 @@
 from dash import html
 import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output, State
 from cliffhanger.pages.page import Page
 
 def layout_function(**kwargs):
     layout = html.Div([
+        html.Div([
+            dbc.Modal([
+                    dbc.ModalHeader(dbc.ModalTitle("Rules")),
+                    dbc.ModalBody(
+                        html.Ul([
+                            html.Li([html.Span("Rule 1: ", className="rule-item"), "Keep it fun!"]),
+                            html.Li([html.Span("Rule 2: ", className="rule-item"), "Enter your BAC once per hour"]),
+                            html.Li([html.Span("Rule 3: ", className="rule-item"), "Wait 15min after your last sip of alcohol before blowing (hint: use the timer for bonus points)"]),
+                            html.Li([html.Span("Rule 4: ", className="rule-item"), "Use points earned from entering your data to place bets on your BAC, other player BACs, or the party average BAC each hour (hint: it's not about drinking the most, but knowing the most)"]),
+                            html.Li([html.Span("Rule 5: ", className="rule-item"), "Spend your points on cards to play on other players to impact their next BAC blow"]),
+                        ])),
+                    dbc.ModalFooter(
+                        dbc.Button("Close", id="close-rules", className="ms-auto", n_clicks=0)
+                    )],
+                id="rules-modal",
+                is_open=True,
+            )]),
         dbc.Row(
             dbc.Col([
                 dbc.Row(
@@ -23,6 +41,12 @@ def layout_function(**kwargs):
     ])
     return layout
 
-callbacks = []
+def close_rules(n_clicks):
+    if n_clicks == 0:
+        return True
+    else:
+        return False
+
+callbacks = [[[Output("rules-modal", "is_open"), Input("close-rules", "n_clicks")], close_rules]]
 
 page = Page('/', 'Home', layout_function, callbacks, False)

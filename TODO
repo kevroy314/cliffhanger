@@ -2,8 +2,11 @@ Bugs:
 timer state desyncs under some conditions - also timer object doesn't always load - maybe port some to dash?
 Iphones fail
 
-bonus reqs:
-Pre-entry bet (where do you think you're at? where do you think other person will be at?)
-Pre-party update bet (where do you think we're all at?)
-inventory system
-card playing system
+reqs:
+inventory data system
+card playing data system
+add card flip animations
+add logic for card buttons
+add betting ui
+add logic for betting
+add ability to "join" a bet defensively

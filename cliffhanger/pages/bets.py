@@ -75,6 +75,9 @@ def bets_party_current_bets(session_id):
     return table
 
 def bets_user_components(session_id, username):
+    # TODO: Get data from database as needed
+    n_cards_played_on_you = 1
+
     player_bet_modal = html.Div(
         [
             dbc.Modal(
@@ -104,8 +107,8 @@ def bets_user_components(session_id, username):
         ]
     )
     return dbc.Row([
-        dbc.Col(dbc.Button("Player Bet", id="player-bet-btn", className="menu-btn")),
-        dbc.Col(dbc.Button("Party Bet", id="party-bet-btn", className="menu-btn")),
+        dbc.Col(dbc.Button("Player Bet", id="player-bet-btn", className="menu-btn", color="warning", disabled=n_cards_played_on_you!=0)),
+        dbc.Col(dbc.Button("Party Bet", id="party-bet-btn", className="menu-btn", color="warning", disabled=n_cards_played_on_you!=0)),
         dbc.Row(bets_user_current_bets(session_id, username)),
         player_bet_modal,
         party_bet_modal

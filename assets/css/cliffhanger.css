@@ -108,3 +108,7 @@ html, body {
 .menu-btn {
   width: 100%;
 }
+
+.btn:disabled {
+  opacity: 0.1;
+}

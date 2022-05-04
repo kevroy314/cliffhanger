@@ -1,0 +1,67 @@
+card_player_reward - amount of points given to card player either automatically or as reward for game
+card_target_reward - amount of points given to card target either automatically or as reward for game
+is_competative_game - makes reward decide by card player (either for target or player)
+is_reactive - can be played to resolve cards causing a new card play
+reaction_effect - the effect the reaction card creates (can be nullify1 nullify2 nullify3 damage-shield reflect or double-next-card), either applied automatically or chosen by player
+is_multi_target - causes player to be able to select multiple targets
+
+COMPLEX CARDS
+
+card modification (requires seeing other deck or modifying deck)
+steal card
+swap card
+peak cards
+double card
+
+multi-target (requires selecting multiple individuals)
+group yodle
+make multiple people drink
+
+reactive spells (play to start effect, auto-triggered?)
+nullify lvl 1
+nullify lvl 2
+nullify lvl 3
+damage shield
+shared damage shield
+reflect
+double next card played on you
+
+mini-games (winner gets more)
+rock paper scissors
+quarters
+3 cup beer pong
+flip cup
+arm wrestle
+riddle
+drink in 30 seconds
+
+
+EASY CARDS
+
+drink actions
+take a drink of their choice with someone else
+make them get you a drink
+____ (hug/hold hands/touch/eye contact) while finish drinks together
+add ___ (ice cubes) to drink
+no ___ (speaking, saying names, etc) until done with drink
+double fist
+drinking partner
+
+force action
+dance
+yodle
+cheers
+follow
+
+
+songs
+The Franches Mountains Choir - the current song (group cheers)
+The Silly Song - the original song, from Snow White (yodle)
+
+concepts
+doom
+
+added options
+card_player_reward - amount of points given to card player either automatically or as reward for game
+card_target_reward - amount of points given to card target either automatically or as reward for game
+is_multi_target - causes player to be able to select multiple targets

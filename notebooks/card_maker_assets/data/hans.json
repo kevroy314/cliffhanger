@@ -1,0 +1,14 @@
+{
+    "cost": 200,
+    "description": "Until the end of your drink, you may not say any names. If you mess up, finish your drink.",
+    "fun-fact": "During the short-lived syndicated run of The Price is Right from 1994-1995, host Doug Davidson named the Cliffhanger Climber Hans Gudagast.",
+    "image": "hans.png",
+    "level": 2,
+    "name": "Hans Gudegast",
+    "output_name": "hans.png",
+    "texture": "461223179.jpg",
+    "type": "Buff",
+    "player-reward": 0,
+    "target-reward": 0,
+    "is_multitarget": 0
+}

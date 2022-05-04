@@ -1,7 +1,7 @@
 logs
 *.log
 __pycache__/
-data
+/data/
 *.db
 assets/qrcodes/
 .vscode/

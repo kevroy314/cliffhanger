@@ -1,3 +1,4 @@
+"""Global variables for visualization and across the app."""
 data_location = './data'
 log_location = './logs'
 

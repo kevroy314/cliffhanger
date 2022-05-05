@@ -1,8 +1,19 @@
-from dash import html, dcc
+"""The cards features are in this module."""
+from dash import html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
+
 def cards_user_components(session_id, username):
+    """Get the user components for the cards feature.
+
+    Args:
+        session_id (str): the session id
+        username (str): the username
+
+    Returns:
+        dbc.Row: a Row object containing the cards user features
+    """
     # TODO: Get data from database as needed
     n_points = 123
     n_cards = 3
@@ -95,23 +106,23 @@ def cards_user_components(session_id, username):
     )
 
     return dbc.Row([
-        dbc.Col(dbc.Button(["Buy Cards", 
-            dbc.Badge(str(n_points), color="light", text_color="primary", className="ms-1")],
-        id="buy-card-modal-btn", color="success", className="menu-btn", disabled=n_cards_played_on_you!=0)),
-        dbc.Col(dbc.Button(["Play Cards", 
-            dbc.Badge(str(n_cards), color="light", text_color="primary", className="ms-1")], 
-        id="play-card-modal-btn", color="info", className="menu-btn", disabled=n_cards_played_on_you!=0)),
-        html.Div(
-            dbc.Col(dbc.Button(["Resolve Cards", 
-                dbc.Badge(str(n_cards_played_on_you), color="light", text_color="primary", className="ms-1")], 
-            id="resolve-card-modal-btn", color="danger", className="menu-btn")), style={'padding-top': '10px'}
-        ),
+        dbc.Col(dbc.Button(["Buy Cards",
+                dbc.Badge(str(n_points), color="light", text_color="primary", className="ms-1")],
+            id="buy-card-modal-btn", color="success", className="menu-btn", disabled=n_cards_played_on_you != 0)),
+        dbc.Col(dbc.Button(["Play Cards",
+                dbc.Badge(str(n_cards), color="light", text_color="primary", className="ms-1")],
+            id="play-card-modal-btn", color="info", className="menu-btn", disabled=n_cards_played_on_you != 0)),
+        html.Div(dbc.Col(dbc.Button(["Resolve Cards",
+                                     dbc.Badge(str(n_cards_played_on_you), color="light", text_color="primary", className="ms-1")],
+                         id="resolve-card-modal-btn", color="danger", className="menu-btn")), style={'padding-top': '10px'}),
         play_card_modal,
         buy_card_modal,
         resolve_card_modal
     ])
 
+
 def play_card(n_clicks_open, n_clicks_place, is_open):
+    """Perform the logic needed for when a card is played."""
     if n_clicks_open is None:
         return False
     if n_clicks_open > 0 and (not is_open):
@@ -122,7 +133,9 @@ def play_card(n_clicks_open, n_clicks_place, is_open):
         # TODO: Add card play logic
         return False
 
+
 def buy_card(n_clicks_open, n_clicks_place, is_open):
+    """Perform the logic needed for when a card is purchased."""
     if n_clicks_open is None:
         return False
     if n_clicks_open > 0 and (not is_open):
@@ -134,7 +147,9 @@ def buy_card(n_clicks_open, n_clicks_place, is_open):
         # TODO: Use carflip.html visualization to reveal card when bought
         return False
 
+
 def resolve_card(n_clicks_open, n_clicks_place, is_open):
+    """Perform the logic needed for when a card is resolved."""
     if n_clicks_open is None:
         return False
     if n_clicks_open > 0 and (not is_open):
@@ -144,7 +159,9 @@ def resolve_card(n_clicks_open, n_clicks_place, is_open):
         print("resolve card")
         # TODO: Add card resolve logic
         # TODO: Use carflip.html visualization to reveal card when opened
+
         return False
+
 
 cards_callbacks = [
     [[Output("play-card-modal", "is_open"),

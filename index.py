@@ -1,3 +1,4 @@
+"""The main entry point of the application."""
 from cliffhanger.utils.globals import data_location, log_location
 import os
 if not os.path.exists(data_location):
@@ -11,12 +12,12 @@ from cliffhanger.utils.log import initialize_logging
 
 initialize_logging("logs/app_logs.log")
 
-import dash
-from dash import dcc, html
-import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output, State
-from cliffhanger.pages import pages
-from cliffhanger.components.navbar import create_navbar
+import dash  # noqa
+from dash import dcc, html  # noqa
+import dash_bootstrap_components as dbc  # noqa
+from dash.dependencies import Input, Output, State  # noqa
+from cliffhanger.pages import pages  # noqa
+from cliffhanger.components.navbar import create_navbar  # noqa
 
 app = dash.Dash(__name__,
                 suppress_callback_exceptions=True,
@@ -61,22 +62,25 @@ app.clientside_callback(
     [Input('javascript-variable-crawler', 'n_intervals')],
 )
 
-@app.callback(Output('page-content', 'children'), 
+
+@app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')], [State("user-preferences", "data"), State("url", "href")])
 def display_page(pathname, data, href):
+    """Display a page on callback when the url changes."""
     layout_args = {}
     layout_args['href'] = href
     layout_args['user-preferences-data'] = data
     if pathname.count('/') > 1:
         # assume it's a data path
         path_components = [x for x in pathname.split('/') if x]
-        pathname = '/'+path_components[0]
+        pathname = '/' + path_components[0]
         layout_args['path_meta'] = path_components[1:]
     for page in pages:
         if page is not None:
             if pathname == page.url:
                 return page.layout_function(**layout_args)
     return pages[0].layout
+
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", debug=True, port=8050)

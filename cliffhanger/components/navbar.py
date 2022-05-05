@@ -1,7 +1,16 @@
+"""The top level navigation bar component."""
 import dash_bootstrap_components as dbc
 
 
 def create_navbar(pages):
+    """Create the application navigation bar.
+
+    Args:
+        pages (list): the list of pages to put in the navbar
+
+    Returns:
+        dbc.NavbarSimple: the navbar object
+    """
     dropdown_options = []
     for page in pages:
         if page is None:

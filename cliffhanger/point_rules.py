@@ -1,2 +1,3 @@
-submit_new_bac_points = 20 # TODO: make this only happen once per hour
+"""This module is for point values for internal logical rules."""
+submit_new_bac_points = 100
 timer_use_points = 100

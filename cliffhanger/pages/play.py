@@ -1,3 +1,4 @@
+"""The main play page of the application."""
 import logging
 from datetime import datetime
 from inspect import trace
@@ -15,18 +16,24 @@ from cliffhanger.database.session import Session
 from cliffhanger.database.user import User
 from cliffhanger.utils.formats import datetime_string_format
 
-from cliffhanger.pages.bets import bets_user_components, \
-                                   bets_session_components, \
-                                   bets_callbacks
-from cliffhanger.pages.cards import cards_user_components, \
-                                    cards_callbacks
+from cliffhanger.pages.bets import bets_user_components, bets_session_components, bets_callbacks
+from cliffhanger.pages.cards import cards_user_components, cards_callbacks
+
 
 def generate_user_table(session):
+    """Given a session object, generate the table describing the current user states.
+
+    Args:
+        session (cliffhanger.database.session.Session): a session object (already initialized)
+
+    Returns:
+        dbc.Row: a Row object containing the status table
+    """
     table_header = [
         html.Thead(html.Tr([
-            html.Th("User", className="party-table-header-item"), 
-            html.Th("Last BAC", className="party-table-header-item"), 
-            html.Th("Last Updated", className="party-table-header-item"), 
+            html.Th("User", className="party-table-header-item"),
+            html.Th("Last BAC", className="party-table-header-item"),
+            html.Th("Last Updated", className="party-table-header-item"),
             html.Th("Points", className="party-table-header-item")
         ]))
     ]
@@ -46,50 +53,54 @@ def generate_user_table(session):
     table = dbc.Row([html.H4("Party Status", style={"padding-top": "10px"}), dbc.Table(table_header + table_body, bordered=True, className="party-table")])
     return table
 
+
 def session_page(**kwargs):
+    """Return a layout object representing the overview of the current session."""
     session_id = kwargs['path_meta'][0]
     session = Session.get_session(session_id)
     most_recent_user = kwargs['user-preferences-data']['most_recent_user']
     layout = html.Div([
-            dbc.Row(
-                dbc.Col([
-                    dbc.Row(
-                        html.H2(f'Welcome to the {session_id} party!', className="page-title"),
-                        justify="center"
-                    ),
-                    dbc.Row(
-                        html.H4(f'Invite more people!', className="page-title"),
-                        justify="center"
-                    ),
-                    dbc.Row(html.Img(src=f"/assets/qrcodes/{session_id}.png", className="session-id-qr"), 
+        dbc.Row(
+            dbc.Col([
+                dbc.Row(
+                    html.H2(f'Welcome to the {session_id} party!', className="page-title"),
+                    justify="center"
+                ),
+                dbc.Row(
+                    html.H4(f'Invite more people!', className="page-title"),
+                    justify="center"
+                ),
+                dbc.Row(html.Img(src=f"/assets/qrcodes/{session_id}.png", className="session-id-qr"),
                         justify="center"),
-                    dbc.Button(html.I(className="fa fa-solid fa-download"), id="download-session-snapshop-btn", className="data-download-button", color="secondary", outline=True),
-                    dcc.Download(id="download-controller"),
-                    generate_user_table(session),
-                    bets_session_components(session_id),
-                    dcc.Graph(figure=session.create_session_graph()),
-                    dcc.Graph(figure=session.create_session_score_graph()),
-                    dbc.Row(
-                        dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href=f"/play/{session_id}/{most_recent_user}"), # TODO - make this link right
-                        justify="center"
-                    ),
-                ], width=10),
-                justify="center"
-            )
-        ])
+                dbc.Button(html.I(className="fa fa-solid fa-download"), id="download-session-snapshop-btn", className="data-download-button", color="secondary", outline=True),
+                dcc.Download(id="download-controller"),
+                generate_user_table(session),
+                bets_session_components(session_id),
+                dcc.Graph(figure=session.create_session_graph()),
+                dcc.Graph(figure=session.create_session_score_graph()),
+                dbc.Row(
+                    dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href=f"/play/{session_id}/{most_recent_user}"),
+                    justify="center"
+                ),
+            ], width=10),
+            justify="center"
+        )
+    ])
     return layout
 
+
 def user_page(**kwargs):
+    """Return a layout object representing the current user's actions (note, they must have created this user on this device)."""
     session_id, username = kwargs['path_meta']
     data = kwargs['user-preferences-data']
-    user = User(session_id, username)
-    secret_key = session_id+"_"+username+"_secret"
+    user = User(session_id, username, create_if_not_exist=False)
+    secret_key = session_id + "_" + username + "_secret"
     if secret_key not in data:
         logging.warn("No secret key, disallowing user page loading")
-        return error_page(**kwargs) # Unauthorized
+        return error_page(**kwargs)  # Unauthorized
     if data[secret_key] != user.user_secret:
         logging.warn("Wrong secret key, disallowing user page loading")
-        return error_page(**kwargs) # Unauthorized
+        return error_page(**kwargs)  # Unauthorized
 
     layout = html.Div([
         html.Script(src="/assets/components/countdown/countdown.js"),
@@ -149,17 +160,16 @@ def user_page(**kwargs):
                 dbc.Row([
                         dbc.Input(value=username, id="play-username"),
                         dbc.Input(value=session_id, id="play-session-id")
-                    ],
-                    className="hide"
-                    
-                ),
+                        ], className="hide"),
             ], width=10),
             justify="center"
         )
     ])
     return layout
 
+
 def error_page(**kwargs):
+    """Show an error if anything goes wrong."""
     layout = html.Div([
         dbc.Row(
             dbc.Col([
@@ -177,7 +187,9 @@ def error_page(**kwargs):
     ])
     return layout
 
+
 def layout_function(**kwargs):
+    """Return the appropriate layout given the path following /play/* ."""
     try:
         if len(kwargs['path_meta']) == 1:
             return session_page(**kwargs)
@@ -192,14 +204,15 @@ def layout_function(**kwargs):
         return error_page(**kwargs)
 
 
-def on_submit_new_bac(n_clicks, bac, username, session_id, data, javascript_data, drink_description_checklist):
-    user = User(session_id, username)
+def on_submit_new_bac(n_clicks, bac, session_id, username, data, javascript_data, drink_description_checklist):
+    """Respond to submissions of new BAC values on callback."""
+    user = User(session_id, username, create_if_not_exist=False)
     if n_clicks is not None:
-        timer_value = None    
+        timer_value = None
         if "timeLeft" in javascript_data:
             timer_value = javascript_data['timeLeft']
-        user = User(session_id, username)
-        secret_key = session_id+"_"+username+"_secret"
+        user = User(session_id, username, create_if_not_exist=False)
+        secret_key = session_id + "_" + username + "_secret"
         if secret_key not in data:
             graph = user.get_user_graph()
             return (["You are not authorized to do this."], graph, f'You currently have {user.points} points.')
@@ -214,7 +227,9 @@ def on_submit_new_bac(n_clicks, bac, username, session_id, data, javascript_data
         graph = user.get_user_graph()
         return ("", graph, f'You currently have {user.points} points.')
 
+
 def download_session_snapshop(n_clicks, data):
+    """Begin a download of the current session data when requested."""
     if n_clicks is not None:
         session_id = data['most_recent_session']
         datestr = datetime.now().strftime(datetime_string_format.replace('/', "-").replace(":", "-").replace(" ", "_"))
@@ -223,8 +238,9 @@ def download_session_snapshop(n_clicks, data):
     else:
         raise PreventUpdate()
 
+
 callbacks = [
-    [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("points-display", "children")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-username", "value"), State("play-session-id", "value"), State("user-preferences", "data"), State("javascript-variables", "data"), State("drink-description-checklist", "value")]], on_submit_new_bac],
+    [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("points-display", "children")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-session-id", "value"), State("play-username", "value"), State("user-preferences", "data"), State("javascript-variables", "data"), State("drink-description-checklist", "value")]], on_submit_new_bac],
     [[Output("download-controller", "data"), [Input("download-session-snapshop-btn", "n_clicks")], [State("user-preferences", "data")]], download_session_snapshop],
 ] + bets_callbacks + cards_callbacks
 

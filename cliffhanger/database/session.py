@@ -2,6 +2,7 @@
 from cliffhanger.database.user import User
 from cliffhanger.utils.globals import data_location, drinks_cat_lut, party_bac_failure_threshold
 from sqlitedict import SqliteDict
+import threading
 import string
 import random
 import os
@@ -13,7 +14,7 @@ import plotly.graph_objects as go
 class Session():
     """The Session object which defines and persists session propertise."""
 
-    def __init__(self, session_id, create_if_not_exist=True):
+    def __init__(self, session_id, create_if_not_exist=False):
         """Initialize a Session and create it if it doesn't exist and it should.
 
         Args:
@@ -31,12 +32,40 @@ class Session():
                 raise KeyError(f"Tablename {session_id} does not exist and create_if_not_exists is False.")
         self.session_db = SqliteDict(db_path, tablename=session_id, autocommit=True)
         self.users = {}
-
         if 'users' not in self.session_db:
             self.session_db['users'] = {}
         else:
             for username in self.session_db['users']:
                 self.users[username] = User(self.session_id, username, create_if_not_exist=True)
+
+        if 'stats' not in self.session_db:
+            self.stats = {}
+        else:
+            self.stats = self.session_db['stats']
+        
+    def stats_thread_func(self):
+        pass
+
+    def set_stats(self, stat_key, stat_value):
+        """Set and persist a stat key.
+
+        Args:
+            stat_key (str): a key to set
+            stat_value (any): a value to set (must be set entirely)
+        """
+        self.stats[stat_key] = stat_value
+        self.session_db['stats'] = self.stats
+
+    def get_stat(self, stat_key):
+        """Get a stat value from the key. Same as obj.stats[stat_key] .
+
+        Args:
+            stat_key (str): a stat key
+
+        Returns:
+            any: the stat object
+        """
+        return self.stats[stat_key]
 
     def new_user(self, username):
         """Create a new user if possible.

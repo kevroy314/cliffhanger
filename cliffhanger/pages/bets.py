@@ -95,35 +95,49 @@ def bets_party_current_bets(session_id):
     Returns:
         dbc.Row: a Row containing the current bets for the party
     """
-    # TODO add party bets visualization
+    # Get all unresolved bets
+    session = Session(session_id)
+    users = list(session.users.keys())
+    bets = []
+    for uname in users:
+        user = User(session_id, uname)
+        user_bets = user.bets
+        for bet in user_bets:
+            if bet.result == "Unresolved":
+                bets.append((uname, bet))
+
     table_header = [
         html.Thead(html.Tr([
-            html.Th("User", className="party-table-header-item"),
-            html.Th("Last BAC", className="party-table-header-item"),
-            html.Th("Bet BAC", className="party-table-header-item"),
+            html.Th("By", className="party-table-header-item"),
+            html.Th("On", className="party-table-header-item"),
+            html.Th("Last", className="party-table-header-item"),
+            html.Th("Bet", className="party-table-header-item"),
             html.Th("Wager", className="party-table-header-item")
         ]))
     ]
 
     rows = []
-    bets = []
     if len(bets) == 0:
         rows = [html.Tr([
                 html.Td("No Bets"),
                 html.Td("No Bets"),
                 html.Td("No Bets"),
+                html.Td("No Bets"),
                 html.Td("No Bets")
                 ])]
-    # rows = []
-    # for username in session.users:
-    #     user = session.users[username]
-    #     row = html.Tr([
-    #         html.Td(user.username),
-    #         html.Td(user.latest_bac),
-    #         html.Td(user.last_update),
-    #         html.Td(str(user.points))
-    #     ])
-    #     rows.append(row)
+
+    else:
+        for bet in bets:
+            uname, bet = bet
+            bet_user = User(session_id, uname)
+            row = html.Tr([
+                html.Td(uname),
+                html.Td(bet.user if bet.user else "party"),
+                html.Td(str(bet_user.latest_bac)),
+                html.Td(str(bet.target)),
+                html.Td(str(bet.value))
+            ])
+            rows.append(row)
 
     table_body = [html.Tbody(rows)]
     table = dbc.Row([html.H4("Party Active Bets"), dbc.Table(table_header + table_body, bordered=True, className="party-table")])

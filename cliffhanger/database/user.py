@@ -15,7 +15,7 @@ import pandas as pd
 class User():
     """An object which persists and returns user data."""
 
-    def __init__(self, session_id, username, create_if_not_exist=True):
+    def __init__(self, session_id, username, create_if_not_exist=False):
         """Get the current user data state, creating it if requested and it doesn't exist.
 
         Args:

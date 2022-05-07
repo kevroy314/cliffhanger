@@ -15,3 +15,6 @@ def initialize_logging(log_filename):
                         format='%(asctime)s %(levelname)s %(module)s %(funcName)s %(message)s',
                         handlers=[logging.FileHandler(log_filename, mode='a'),
                                   stream_handler])
+
+
+initialize_logging("logs/app_logs.log")

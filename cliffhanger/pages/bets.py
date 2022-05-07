@@ -1,7 +1,8 @@
 """This module coordinates the betting features."""
-from dash import html, dcc
 import dash_bootstrap_components as dbc
+from dash import html, dcc
 from dash.dependencies import Input, Output, State
+
 from cliffhanger.database.session import Session
 from cliffhanger.database.user import User
 

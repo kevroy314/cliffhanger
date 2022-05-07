@@ -1,15 +1,19 @@
 """This module defines the User properties and methods for persisting user data."""
-from datetime import datetime
-from cliffhanger.point_rules import submit_new_bac_points, timer_use_points
-from cliffhanger.utils.formats import datetime_string_format
-from cliffhanger.utils.globals import data_location, drinks_cat_lut, drinks_color_lut
-import plotly.express as px
-import plotly.graph_objs as go
-from sqlitedict import SqliteDict
-import uuid
 import os
+import uuid
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objs as go
+
+from sqlitedict import SqliteDict
+
+from cliffhanger.point_rules import SUBMIT_NEW_BAC_POINTS, TIMER_USE_POINTS
+from cliffhanger.utils.formats import DATETIME_STRING_FORMAT
+from cliffhanger.utils.globals import (DATA_LOCATION, drinks_cat_lut,
+                                       drinks_color_lut)
 
 
 class User():
@@ -28,7 +32,7 @@ class User():
         """
         session_id = session_id.lower()
         tablename = session_id + "_" + username
-        db_path = os.path.join(data_location, 'db.sqlite')
+        db_path = os.path.join(DATA_LOCATION, 'db.sqlite')
         if not create_if_not_exist:
             if tablename not in SqliteDict(db_path).get_tablenames(db_path):
                 raise KeyError(f"Tablename {session_id} does not exist and create_if_not_exists is False.")
@@ -39,7 +43,7 @@ class User():
             self.bac_history_datetimes = []
             self.drink_description_checklist_history = []
             self.latest_bac = "Undefined"
-            self.last_update = datetime.now().strftime(datetime_string_format)
+            self.last_update = datetime.now().strftime(DATETIME_STRING_FORMAT)
             self.points = 0
             self.points_history = []
             self.user_secret = str(uuid.uuid4())
@@ -94,7 +98,7 @@ class User():
         self.bac_history_datetimes.append(now)
         self.drink_description_checklist_history.append(drink_description_checklist)
         self.latest_bac = str(new_bac)
-        self.last_update = now.strftime(datetime_string_format)
+        self.last_update = now.strftime(DATETIME_STRING_FORMAT)
 
         # SCORING
 
@@ -111,10 +115,10 @@ class User():
         # award points for BAC entry if it is the first entry or the first entry in this hour
         if len(self.bac_history_datetimes) == 1 or \
                 is_in_same_hour(self.bac_history_datetimes[-2], self.bac_history_datetimes[-1]):
-            self.points += submit_new_bac_points
+            self.points += SUBMIT_NEW_BAC_POINTS
             # If they used the timer and it's within 30 seconds of 0, bonus points!
             if timer_value is not None and timer_value <= 30:
-                self.points += timer_use_points
+                self.points += TIMER_USE_POINTS
         self.points_history.append(self.points)
         self.user_db['user'] = self.serialize()
 

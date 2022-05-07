@@ -18,7 +18,7 @@ class Page():
             show_in_navbar (bool): if True, will appear in the navbar. Hidden of false
         """
         if url[0] != '/':
-            logger.warn(f"Page {url} with display name {display_name} does not begin with /, will likely fail to load.")
+            logger.warning(f"Page {url} with display name {display_name} does not begin with /, will likely fail to load.")
         self.url = url
         self.display_name = display_name
         self.layout_function = layout_function

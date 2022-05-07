@@ -1,14 +1,17 @@
 """This module defines the Session information and persists it."""
-from cliffhanger.database.user import User
-from cliffhanger.utils.globals import data_location, drinks_cat_lut, party_bac_failure_threshold
-from sqlitedict import SqliteDict
-import threading
-import string
-import random
 import os
+import random
+import string
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+
+from sqlitedict import SqliteDict
+
+from cliffhanger.database.user import User
+from cliffhanger.utils.globals import (DATA_LOCATION, drinks_cat_lut,
+                                       PARTY_BAC_FAILURE_THRESHOLD)
 
 
 class Session():
@@ -26,7 +29,7 @@ class Session():
         """
         session_id = session_id.lower()
         self.session_id = session_id
-        db_path = os.path.join(data_location, 'db.sqlite')
+        db_path = os.path.join(DATA_LOCATION, 'db.sqlite')
         if not create_if_not_exist:
             if session_id not in SqliteDict(db_path).get_tablenames(db_path):
                 raise KeyError(f"Tablename {session_id} does not exist and create_if_not_exists is False.")
@@ -42,9 +45,6 @@ class Session():
             self.stats = {}
         else:
             self.stats = self.session_db['stats']
-        
-    def stats_thread_func(self):
-        pass
 
     def set_stats(self, stat_key, stat_value):
         """Set and persist a stat key.
@@ -129,7 +129,7 @@ class Session():
         mdf = mdf.fillna(method="ffill").fillna(method="bfill")
         mdf = mdf.mean(axis=1).reset_index()
         mdf.columns = ["Datetime", "Party Average"]
-        mdf['Threshold'] = party_bac_failure_threshold
+        mdf['Threshold'] = PARTY_BAC_FAILURE_THRESHOLD
 
         df = df.rename({'dt': 'Datetime', 'bac': 'BAC', 'user': "User"}, axis=1)
         fig = px.line(df, x='Datetime', y='BAC', color='User')

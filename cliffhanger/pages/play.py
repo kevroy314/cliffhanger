@@ -1,23 +1,20 @@
 """The main play page of the application."""
 import logging
-from datetime import datetime
-from inspect import trace
 import traceback
+from datetime import datetime
 
-import pandas as pd
-
-from dash import html, dcc
 import dash_bootstrap_components as dbc
+from dash import dcc, html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from cliffhanger.pages.page import Page
 from cliffhanger.database.session import Session
 from cliffhanger.database.user import User
-from cliffhanger.utils.formats import datetime_string_format
-
-from cliffhanger.pages.bets import bets_user_components, bets_session_components, bets_callbacks
-from cliffhanger.pages.cards import cards_user_components, cards_callbacks
+from cliffhanger.pages.bets import (bets_callbacks, bets_session_components,
+                                    bets_user_components)
+from cliffhanger.pages.cards import cards_callbacks, cards_user_components
+from cliffhanger.pages.page import Page
+from cliffhanger.utils.formats import DATETIME_STRING_FORMAT
 
 
 def generate_user_table(session):
@@ -67,7 +64,7 @@ def session_page(**kwargs):
                     justify="center"
                 ),
                 dbc.Row(
-                    html.H4(f'Invite more people!', className="page-title"),
+                    html.H4('Invite more people!', className="page-title"),
                     justify="center"
                 ),
                 dbc.Row(html.Img(src=f"/assets/qrcodes/{session_id}.png", className="session-id-qr"),
@@ -96,10 +93,10 @@ def user_page(**kwargs):
     user = User(session_id, username, create_if_not_exist=False)
     secret_key = session_id + "_" + username + "_secret"
     if secret_key not in data:
-        logging.warn("No secret key, disallowing user page loading")
+        logging.warning("No secret key, disallowing user page loading")
         return error_page(**kwargs)  # Unauthorized
     if data[secret_key] != user.user_secret:
-        logging.warn("Wrong secret key, disallowing user page loading")
+        logging.warning("Wrong secret key, disallowing user page loading")
         return error_page(**kwargs)  # Unauthorized
 
     layout = html.Div([
@@ -168,7 +165,7 @@ def user_page(**kwargs):
     return layout
 
 
-def error_page(**kwargs):
+def error_page(**kwargs):  # pylint: disable=unused-argument
     """Show an error if anything goes wrong."""
     layout = html.Div([
         dbc.Row(
@@ -196,10 +193,10 @@ def layout_function(**kwargs):
         elif len(kwargs['path_meta']) == 2:
             return user_page(**kwargs)
         else:
-            logging.warn("Bad URL format, going to play error page")
+            logging.warning("Bad URL format, going to play error page")
             return error_page(**kwargs)
-    except Exception as e:
-        logging.warn("Unexpected error, going to play error page. Printing traceback")
+    except Exception:  # pylint: disable=broad-except
+        logging.warning("Unexpected error, going to play error page. Printing traceback")
         traceback.print_exc()
         return error_page(**kwargs)
 
@@ -222,7 +219,7 @@ def on_submit_new_bac(n_clicks, bac, session_id, username, data, javascript_data
         now = datetime.now()
         user.update_bac(bac, timer_value, drink_description_checklist)
         graph = user.get_user_graph()
-        return (["Submitted Successfully!", html.Br(), f"({now.strftime(datetime_string_format)})"], graph, f'You currently have {user.points} points.')
+        return (["Submitted Successfully!", html.Br(), f"({now.strftime(DATETIME_STRING_FORMAT)})"], graph, f'You currently have {user.points} points.')
     else:
         graph = user.get_user_graph()
         return ("", graph, f'You currently have {user.points} points.')
@@ -232,7 +229,7 @@ def download_session_snapshop(n_clicks, data):
     """Begin a download of the current session data when requested."""
     if n_clicks is not None:
         session_id = data['most_recent_session']
-        datestr = datetime.now().strftime(datetime_string_format.replace('/', "-").replace(":", "-").replace(" ", "_"))
+        datestr = datetime.now().strftime(DATETIME_STRING_FORMAT.replace('/', "-").replace(":", "-").replace(" ", "_"))
         df = Session(session_id).extract_data_snapshot()
         return dcc.send_data_frame(df.to_csv, f"{session_id}_{datestr}.csv")
     else:

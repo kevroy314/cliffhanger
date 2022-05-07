@@ -1,11 +1,12 @@
 """The home page for the application which shows rules and allows basic feature navigation."""
-from dash import html
 import dash_bootstrap_components as dbc
+from dash import html
 from dash.dependencies import Input, Output
+
 from cliffhanger.pages.page import Page
 
 
-def layout_function(**kwargs):
+def layout_function(**kwargs):  # pylint: disable=unused-argument
     """Return a layout object for the home page."""
     layout = html.Div([
         html.Div([

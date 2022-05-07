@@ -1,23 +1,12 @@
 """The main entry point of the application."""
-from cliffhanger.utils.globals import data_location, log_location
-import os
-if not os.path.exists(data_location):
-    os.mkdir(data_location)
-if not os.path.exists(log_location):
-    os.mkdir(log_location)
-if not os.path.exists("./assets/qrcodes"):
-    os.mkdir("./assets/qrcodes")
+import dash_bootstrap_components as dbc
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output, State
 
-from cliffhanger.utils.log import initialize_logging
-
-initialize_logging("logs/app_logs.log")
-
-import dash  # noqa
-from dash import dcc, html  # noqa
-import dash_bootstrap_components as dbc  # noqa
-from dash.dependencies import Input, Output, State  # noqa
-from cliffhanger.pages import pages  # noqa
-from cliffhanger.components.navbar import create_navbar  # noqa
+import cliffhanger.utils.log  # pylint: disable=unused-import
+from cliffhanger.pages import pages
+from cliffhanger.components.navbar import create_navbar
 
 app = dash.Dash(__name__,
                 suppress_callback_exceptions=True,
@@ -41,10 +30,10 @@ app.layout = html.Div([
     html.Div(id='page-content')
 ])
 
-for page in pages:
-    if page is None:
+for _page in pages:
+    if _page is None:
         continue
-    for callback in page.callbacks:
+    for callback in _page.callbacks:
         ios_definitions, function_definition = callback
         app.callback(*ios_definitions)(function_definition)
 
@@ -79,7 +68,7 @@ def display_page(pathname, data, href):
         if page is not None:
             if pathname == page.url:
                 return page.layout_function(**layout_args)
-    return pages[0].layout
+    return pages[0].layout_function(**layout_args)
 
 
 if __name__ == '__main__':

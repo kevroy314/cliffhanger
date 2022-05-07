@@ -1,2 +1,2 @@
 """Formatting options for the app."""
-datetime_string_format = "%m/%d/%Y, %I:%M:%S%p"
+DATETIME_STRING_FORMAT = "%m/%d/%Y, %I:%M:%S%p"

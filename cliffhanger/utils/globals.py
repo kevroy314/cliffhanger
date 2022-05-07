@@ -1,6 +1,8 @@
 """Global variables for visualization and across the app."""
-data_location = './data'
-log_location = './logs'
+import os
+
+DATA_LOCATION = './data'
+LOG_LOCATION = './logs'
 
 drinks_cat_lut = {
     1: "Nothing",
@@ -18,4 +20,11 @@ drinks_color_lut = {
     "Liquor (Shots)": "#2364AA"
 }
 
-party_bac_failure_threshold = 0.08
+PARTY_BAC_FAILURE_THRESHOLD = 0.08
+
+if not os.path.exists(DATA_LOCATION):
+    os.mkdir(DATA_LOCATION)
+if not os.path.exists(LOG_LOCATION):
+    os.mkdir(LOG_LOCATION)
+if not os.path.exists("./assets/qrcodes"):
+    os.mkdir("./assets/qrcodes")

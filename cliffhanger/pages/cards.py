@@ -1,6 +1,6 @@
 """The cards features are in this module."""
-from dash import html
 import dash_bootstrap_components as dbc
+from dash import html
 from dash.dependencies import Input, Output, State
 
 

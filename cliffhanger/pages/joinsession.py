@@ -1,13 +1,15 @@
 """Join a new session, creating a new user."""
-from dash import html, dcc
 import dash_bootstrap_components as dbc
+from dash import dcc, html
 from dash.dependencies import Input, Output, State
-from cliffhanger.pages.page import Page
+
 from coolname import generate_slug
+
 from cliffhanger.database.session import Session
+from cliffhanger.pages.page import Page
 
 
-def get_name(maxLength=20):
+def get_name(max_length=20):
     """Generate a random username.
 
     Args:
@@ -17,7 +19,7 @@ def get_name(maxLength=20):
         str: a random username string
     """
     name = generate_slug(2)
-    while len(name) > maxLength:
+    while len(name) > max_length:
         name = generate_slug(2)
     return name
 
@@ -38,7 +40,7 @@ def layout_function(**kwargs):
                     html.H4('Enter Your Username', className="page-title"),
                     justify="center"
                 ),
-                dbc.Row(dbc.Input(value=get_name(maxLength=20), className="text-input", maxLength=20, id="username"),
+                dbc.Row(dbc.Input(value=get_name(max_length=20), className="text-input", maxLength=20, id="username"),
                         justify="center"),
                 dbc.Row(
                     html.H4('Session ID', className="label-title"),

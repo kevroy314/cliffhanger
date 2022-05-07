@@ -5,6 +5,7 @@ from dash import dcc, html
 from dash.dependencies import Input, Output, State
 
 import cliffhanger.utils.log  # pylint: disable=unused-import
+import cliffhanger.session_monitor  # pylint: disable=unused-import
 from cliffhanger.pages import pages
 from cliffhanger.components.navbar import create_navbar
 

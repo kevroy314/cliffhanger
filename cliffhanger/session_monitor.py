@@ -10,7 +10,7 @@ from cliffhanger.database.session import Session
 from cliffhanger.database.user import User
 from cliffhanger.utils.globals import DATA_LOCATION
 
-SCAN_INTERVAL = 5000
+SCAN_INTERVAL = 5
 
 
 def _stats_thread_func():
@@ -47,7 +47,7 @@ def _stats_thread_func():
                 elif bet_target != "party":
                     # find closest and resolve bet
                     pass
-
+        print("watching")
         prev_time = cur_time
         time.sleep(SCAN_INTERVAL)
 

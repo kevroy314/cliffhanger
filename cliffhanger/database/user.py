@@ -73,8 +73,28 @@ class User():
         Args:
             bet (cliffhanger.pages.bets.Bet): a Bet object
         """
+        # TODO Only allow bets with sufficient currency
         self.bets.append(bet)
         self.user_db['user'] = self.serialize()
+
+    def resolve_bet_as_loss(self, bet):
+        """Resolve a bet for the user as a loss.
+
+        Args:
+            bet (cliffhanger.pages.bets.Bet): the bet to resolve for this user
+        """
+        # TODO
+        print(f"resolving bet {bet} as loss")
+
+    def resolve_bet_as_win(self, bet, pot_split):
+        """Resolve a bet for the user as a win.
+
+        Args:
+            bet (cliffhanger.pages.bets.Bet): the bet to resolve for this user
+            pot_split (int): the points coming from other users to be given straight to this user
+        """
+        # TODO
+        print(f"resolving bet {bet} as win plus pot split {pot_split}")
 
     def load_from_serialized(self, serialized_dict):
         """Load data from a serialized dictionary into THIS object.

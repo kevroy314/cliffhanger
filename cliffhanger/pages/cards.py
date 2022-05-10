@@ -14,6 +14,7 @@ def cards_user_components(session_id, username):
     Returns:
         dbc.Row: a Row object containing the cards user features
     """
+    print(f"{session_id} {username}")
     # TODO: Get data from database as needed
     n_points = 123
     n_cards = 3

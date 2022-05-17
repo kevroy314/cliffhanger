@@ -1,6 +1,6 @@
 """This module coordinates the betting features."""
 import dash_bootstrap_components as dbc
-from dash import html, dcc
+from dash import html, dcc, ALL
 from dash.dependencies import Input, Output, State
 
 from cliffhanger.database.session import Session
@@ -87,15 +87,7 @@ def bets_user_current_bets(session_id, username):
     return table
 
 
-def bets_party_current_bets(session_id):
-    """Get the current bets for the whole party.
-
-    Args:
-        session_id (str): the session id
-
-    Returns:
-        dbc.Row: a Row containing the current bets for the party
-    """
+def _get_unresolved_bets(session_id):
     # Get all unresolved bets
     session = Session(session_id)
     users = list(session.users.keys())
@@ -106,9 +98,23 @@ def bets_party_current_bets(session_id):
         for bet in user_bets:
             if bet.result == "Unresolved":
                 bets.append((uname, bet))
+    return bets
+
+
+def bets_party_current_bets(session_id):
+    """Get the current bets for the whole party.
+
+    Args:
+        session_id (str): the session id
+
+    Returns:
+        dbc.Row: a Row containing the current bets for the party
+    """
+    bets = _get_unresolved_bets(session_id)
 
     table_header = [
         html.Thead(html.Tr([
+            html.Th("Join?", className="party-table-header-item"),
             html.Th("By", className="party-table-header-item"),
             html.Th("On", className="party-table-header-item"),
             html.Th("Last", className="party-table-header-item"),
@@ -124,14 +130,16 @@ def bets_party_current_bets(session_id):
                 html.Td("No Bets"),
                 html.Td("No Bets"),
                 html.Td("No Bets"),
+                html.Td("No Bets"),
                 html.Td("No Bets")
                 ])]
 
     else:
-        for bet in bets:
+        for idx, bet in enumerate(bets):
             uname, bet = bet
             bet_user = User(session_id, uname)
             row = html.Tr([
+                dbc.Button("Join", id={"type": "bet-join-btn", "index": idx}),
                 html.Td(uname),
                 html.Td(bet.user if bet.user else "party"),
                 html.Td(str(bet_user.latest_bac)),
@@ -141,7 +149,7 @@ def bets_party_current_bets(session_id):
             rows.append(row)
 
     table_body = [html.Tbody(rows)]
-    table = dbc.Row([html.H4("Party Active Bets"), dbc.Table(table_header + table_body, bordered=True, className="party-table")])
+    table = dbc.Row([html.Div(id="bet-join-btn-out", style={"display": "none"}), html.H4("Party Active Bets"), dbc.Table(table_header + table_body, bordered=True, className="party-table")])
     return table
 
 
@@ -287,7 +295,18 @@ def update_user_bets_interval(n_intervals, session_id, username):
         return bets_user_current_bets(session_id, username)
 
 
+def join_bet_btn(n_clicks_states, session_id):
+    bets = _get_unresolved_bets(session_id)
+    print(n_clicks_states)
+    print(bets)
+    return ""
+
+
 bets_callbacks = [
+    [[Output("bet-join-btn-out", "children"),
+      Input({"type": "bet-join-btn", "index": ALL}, 'n_clicks'),
+      [State("play-session-id", "value"), State("play-username", "value")]],
+     join_bet_btn],
     [[Output("bets-user-current-bets", "children"),
       Input("bet-update-interval", "n_intervals"),
       [State("play-session-id", "value"), State("play-username", "value")]],

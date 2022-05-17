@@ -78,7 +78,6 @@ def _stats_thread_func():
             for username in usernames:
                 # get the user data and default to no trigger
                 user = User(session_id, username)
-                bac_sum += user.latest_bac
                 user_triggers[username] = False
                 if username not in prev_bac_updates[session_id]:
                     prev_bac_updates[session_id][username] = None  # default value to avoid key errors
@@ -88,6 +87,8 @@ def _stats_thread_func():
                     if prev_bac_updates[session_id][username] is not None:
                         user_triggers[username] = True  # trigger the bet logic for that user
                     prev_bac_updates[session_id][username] = user.last_update  # update the value for next iteration
+                if user.latest_bac != "Undefined":
+                    bac_sum += float(user.latest_bac)
                 # iterate through the bets and populate the bet pool values (i.e. who bet on a given user)
                 for bet in user.bets:
                     if bet.result == "Unresolved":
@@ -98,9 +99,13 @@ def _stats_thread_func():
             # now we have the key->value mappings describing who has bets on them and if those bets should be resolved this round
             # we also can tell if the party bets for the session should be resolved
             # we loop through all the bet targets and resolve them if the triggers are present
-            party_bac = bac_sum / len(usernames)
+            if len(usernames) == 0:
+                party_bac = -1
+            else:
+                party_bac = bac_sum / len(usernames)
             for bet_target in list(bet_pools.keys()):
                 if bet_target is None and resolve_party_bets:
+                     # TODO: Add the party average to the party object for visualization purposes
                     _resolve_bets(session_id, bet_pools[bet_target], "party", party_bac)
                 elif bet_target is not None and user_triggers[bet_target]:
                     _resolve_bets(session_id, bet_pools[bet_target], "player", User(session_id, bet_target).latest_bac)

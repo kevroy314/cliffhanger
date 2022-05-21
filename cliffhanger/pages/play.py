@@ -79,6 +79,10 @@ def session_page(**kwargs):
                     dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href=f"/play/{session_id}/{most_recent_user}"),
                     justify="center"
                 ),
+                dbc.Row([
+                        dbc.Input(value=most_recent_user, id="play-username"),
+                        dbc.Input(value=session_id, id="play-session-id")
+                        ], className="hide"),
             ], width=10),
             justify="center"
         )

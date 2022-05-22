@@ -190,13 +190,17 @@ def image_creator_search_callback(n_clicks, search_query):
 
 @app.callback(
     Output("image-creator-graph", "figure"),
-    [Input("image-creator-search-results", "active_index"), Input("image-creator-style-select", "value"),
-    State("image-creator-search-results", "items")]
+    [Input("image-creator-search-results", "active_index"),
+     Input("image-creator-style-select", "value"),
+     Input("image-creator-search-results", "items")]
 )
 def apply_image_style_callback(car_selection_index, style_selection, images):
-    if car_selection_index is None:
+    if images is None or len(images) == 0:
         raise PreventUpdate
-    img_path = images[car_selection_index]['key']
+    if car_selection_index is not None:
+        img_path = images[car_selection_index]['key']
+    else:
+        img_path = images[0]['key']
     return px.imshow(PIL.Image.open(img_path))
 
 if __name__ == '__main__':

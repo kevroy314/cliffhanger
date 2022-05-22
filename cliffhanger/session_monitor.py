@@ -105,7 +105,7 @@ def _stats_thread_func():
                 party_bac = bac_sum / len(usernames)
             for bet_target in list(bet_pools.keys()):
                 if bet_target is None and resolve_party_bets:
-                     # TODO: Add the party average to the party object for visualization purposes
+                    # TODO: Add the party average to the party object for visualization purposes
                     _resolve_bets(session_id, bet_pools[bet_target], "party", party_bac)
                 elif bet_target is not None and user_triggers[bet_target]:
                     _resolve_bets(session_id, bet_pools[bet_target], "player", User(session_id, bet_target).latest_bac)

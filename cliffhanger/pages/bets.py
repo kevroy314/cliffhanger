@@ -1,7 +1,8 @@
 """This module coordinates the betting features."""
-import numpy as np
-import pickle as pkl
 import base64
+import pickle as pkl
+
+import numpy as np
 
 import dash_bootstrap_components as dbc
 from dash import html, dcc, ALL
@@ -305,13 +306,15 @@ def update_user_bets_interval(n_intervals, session_id, username):
         return bets_user_current_bets(session_id, username)
 
 
-def join_bet_btn(n_clicks_states, session_id, username, bets_persistence):
+def _join_bet_btn(n_clicks_states, session_id, username, bets_persistence):
     if all([x is None for x in n_clicks_states]):
         return ""
     btn = np.argmax([x if x is not None else 0 for x in n_clicks_states])
     bets = pkl.loads(base64.b64decode(bets_persistence))
     selected_bet = bets[btn]
     print(selected_bet)
+    print(session_id)
+    print(username)
     # TODO: This should open a modal to allow the user to select how much to bet
     return ""
 
@@ -320,7 +323,7 @@ bets_callbacks = [
     [[Output("bet-join-btn-out", "children"),
       Input({"type": "bet-join-btn", "index": ALL}, 'n_clicks_timestamp'),
       [State("play-session-id", "value"), State("play-username", "value"), State("bet-persistence-store", "data")]],
-     join_bet_btn],
+     _join_bet_btn],
     [[Output("bets-user-current-bets", "children"),
       Input("bet-update-interval", "n_intervals"),
       [State("play-session-id", "value"), State("play-username", "value")]],

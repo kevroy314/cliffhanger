@@ -1,8 +1,10 @@
+from ctypes import resize
 import os
 import PIL
 import json
 import plotly.express as px
 import dash
+import plotly.graph_objects as go
 from dash.exceptions import PreventUpdate
 from dash import dcc, html
 import dash_bootstrap_components as dbc
@@ -188,6 +190,11 @@ def image_creator_search_callback(n_clicks, search_query):
     raise PreventUpdate
 
 
+def _triangulation(img):
+    
+    return img
+
+
 @app.callback(
     Output("image-creator-graph", "figure"),
     [Input("image-creator-search-results", "active_index"),
@@ -201,7 +208,40 @@ def apply_image_style_callback(car_selection_index, style_selection, images):
         img_path = images[car_selection_index]['key']
     else:
         img_path = images[0]['key']
-    return px.imshow(PIL.Image.open(img_path))
+    img = PIL.Image.open(img_path)
+    if style_selection == "1":
+        img = _triangulation(img)
+    blank_img = PIL.Image.open("blank_image.png")
+    if img.width > blank_img.width:
+        proportion = img.width / blank_img.width
+        blank_img = blank_img.resize((img.width, int(proportion * blank_img.height)))
+    if img.height > blank_img.height:
+        proportion = img.height / blank_img.height
+        blank_img = blank_img.resize((int(proportion * blank_img.width), img.height))
+    fig = px.imshow(blank_img)
+    fig.add_layout_image(
+        dict(
+            source=img,
+            xref="x",
+            yref="y",
+            x=0,
+            y=0,
+            sizex=img.width,
+            sizey=img.height,
+            # sizing="stretch",
+            opacity=1,
+            layer="above")
+    )
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        xaxis={'showgrid': False},
+        yaxis={'showgrid': False}
+    )
+    fig.update_layout(coloraxis_showscale=False)
+    fig.update_xaxes(showticklabels=False)
+    fig.update_yaxes(showticklabels=False)
+    return fig
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", debug=True, port=8051)

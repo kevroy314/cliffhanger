@@ -10,6 +10,12 @@ from dash import dcc, html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 import cardmaker
+from PIL import Image, ImageFilter, ImageDraw
+from skimage.segmentation import slic
+from skimage.feature import corner_peaks, corner_fast
+from skimage.color import rgb2gray, label2rgb
+from scipy.spatial import Delaunay
+import numpy as np
 
 app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.SLATE], assets_folder="./card_maker_assets")
 
@@ -41,8 +47,14 @@ image_creator = dbc.Modal(
                 options=[
                     {"label": "Original Style", "value": "0"},
                     {"label": "Triangulation Style", "value": "1"},
+                    {"label": "Blur and Quantize", "value": "2"},
+                    {"label": "Cluster", "value": "3"}
                 ],
             ),
+            html.Label("", id="tweak-0-label"),
+            dcc.Slider(0, 1, 0.1, id="tweak-0-slider", disabled=True),
+            html.Label("", id="tweak-1-label"),
+            dcc.Slider(0, 1, 0.1, id="tweak-1-slider", disabled=True),
             dcc.Graph(id="image-creator-graph"),
             dbc.Button("Crop to View and Save", id="image-creator-save-btn"),
         ]),
@@ -190,18 +202,59 @@ def image_creator_search_callback(n_clicks, search_query):
     raise PreventUpdate
 
 
-def _triangulation(img):
-    
+def _blur_and_quantize(img, blur=5, quantize=16):
+    img = img.filter(ImageFilter.GaussianBlur(radius=blur))
+    img = img.quantize(quantize)
     return img
+
+def _color_cluster(img, n_segments=100, compactness=1):
+    image_array = np.asarray(img)
+    segments = slic(image_array, n_segments=100, compactness=1)
+    segment_ids = [x+1 for x in range(np.array(segments).max())]
+    img = Image.fromarray(label2rgb(segments, image_array, kind='avg', bg_label=0))
+    return img
+
+def _triangulation(img, n=12, threshold=0.15):
+    image_array = np.asarray(img)
+    gray_image = rgb2gray(image_array)
+
+    points = [tuple([x[1], x[0]]) for x in corner_peaks(corner_fast(gray_image, n=n, threshold=threshold))]
+    for i in range(0, img.width, int(img.width/4)):
+        points.append((0, i))
+        points.append((i, 0))
+        points.append((img.height, i))
+        points.append((i, img.height))
+    for i in range(0, img.height, int(img.height/4)):
+        points.append((0, i))
+        points.append((i, 0))
+        points.append((i, img.width))
+        points.append((img.width, i))
+    points.append((img.width, img.height))
+    tri = Delaunay(points, incremental=True)
+    draw_img = img.copy()
+    draw = ImageDraw.Draw(draw_img)
+    draw.rectangle([(0, 0), (draw_img.width, draw_img.height)], fill=(0, 0, 0))
+    for a, b, c in tri.simplices:
+        center = tuple(((np.array(points[a]).astype(float) + np.array(points[b]).astype(float) + np.array(points[c]).astype(float))/3.0).astype(int))
+        center = (min(center[0], img.width-1), min(center[1], img.height-1))
+        draw.polygon([points[a], points[b], points[c]], fill=img.getpixel(center))
+    return draw_img
 
 
 @app.callback(
-    Output("image-creator-graph", "figure"),
+    [Output("image-creator-graph", "figure"),
+     Output("tweak-0-label", "children"),
+     Output("tweak-1-label", "children"),
+     Output("tweak-0-slider", "disabled"),
+     Output("tweak-1-slider", "disabled")],
     [Input("image-creator-search-results", "active_index"),
      Input("image-creator-style-select", "value"),
-     Input("image-creator-search-results", "items")]
+     Input("image-creator-search-results", "items"),
+     Input("tweak-0-slider", "value"),
+     Input("tweak-1-slider", "value")]
 )
-def apply_image_style_callback(car_selection_index, style_selection, images):
+def apply_image_style_callback(car_selection_index, style_selection, images, slider0, slider1):
+    # TODO: Finish wiring up sliders and autopopulating default values and ranges - use values appropriately
     if images is None or len(images) == 0:
         raise PreventUpdate
     if car_selection_index is not None:
@@ -209,8 +262,20 @@ def apply_image_style_callback(car_selection_index, style_selection, images):
     else:
         img_path = images[0]['key']
     img = PIL.Image.open(img_path)
+    tweak0, tweak1 = "", ""
+    tweak0_disabled, tweak1_disabled = True, True
     if style_selection == "1":
         img = _triangulation(img)
+        tweak0, tweak1 = "N", "Threshold"
+        tweak0_disabled, tweak1_disabled = False, False
+    elif style_selection == "2":
+        img = _blur_and_quantize(img)
+        tweak0, tweak1 = "Blur Size", "Quantize Levels"
+        tweak0_disabled, tweak1_disabled = False, False
+    elif style_selection == "3":
+        img = _color_cluster(img)
+        tweak0, tweak1 = "N Segments", "Compactness"
+        tweak0_disabled, tweak1_disabled = False, False
     blank_img = PIL.Image.open("blank_image.png")
     if img.width > blank_img.width:
         proportion = img.width / blank_img.width
@@ -241,7 +306,7 @@ def apply_image_style_callback(car_selection_index, style_selection, images):
     fig.update_layout(coloraxis_showscale=False)
     fig.update_xaxes(showticklabels=False)
     fig.update_yaxes(showticklabels=False)
-    return fig
+    return fig, tweak0, tweak1, tweak0_disabled, tweak1_disabled
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", debug=True, port=8051)

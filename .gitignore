@@ -8,3 +8,4 @@ assets/qrcodes/
 .pytest_cache/
 .ipynb_checkpoints/
 /notebooks/imagesearch/
+checkpoints/

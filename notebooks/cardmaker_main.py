@@ -1,9 +1,15 @@
-from ctypes import resize
+from distutils.command.upload import upload
+from itsdangerous import base64_decode
+from tokenize import blank_re
+from ctypes import alignment, resize
 import os
+import uuid
 import PIL
+import base64
 import json
 import plotly.express as px
 import dash
+from datetime import datetime
 import plotly.graph_objects as go
 from dash.exceptions import PreventUpdate
 from dash import dcc, html
@@ -21,6 +27,7 @@ app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.SLATE], assets_folde
 
 texture_path = 'card_maker_assets/textures'
 texture_images, texture_paths = cardmaker.load_images_as_b64("card_maker_assets/textures", include_paths=True)
+DT_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 image_creator = dbc.Modal(
     [
@@ -39,7 +46,7 @@ image_creator = dbc.Modal(
                 items=[],
                 controls=True,
                 indicators=True,
-                style={"width": "50vw"}
+                style={"width": "50vw", "margin-left": "25vw"},
             ),
             dbc.Select(
                 id="image-creator-style-select",
@@ -65,6 +72,12 @@ image_creator = dbc.Modal(
 
 main_layout = html.Div([
     html.H1("Cardmaker"),
+    html.Hr(),
+    html.H2("Card Save/Load"),
+    dcc.Upload(dbc.Button("Open Card"), accept='application/json', id="open-card-upload"),
+    dbc.Input(id="save-filename", type="text"),
+    dbc.Button("Save Card", id="save-card-btn"),
+    dcc.Download(id="save-selection"),
     html.Hr(),
     html.H2("Text Elements"),
     dbc.Label("Card Name"),
@@ -111,6 +124,7 @@ main_layout = html.Div([
     ),
     html.Label("Background Texture"),
     dbc.Carousel(
+        id="texture-select",
         items=[
             {"key": meta, "src": image} for image, meta in zip(texture_images, texture_paths)
         ],
@@ -121,17 +135,16 @@ main_layout = html.Div([
     html.Hr(),
 
     html.H2("Card Image"),
-    dbc.Button("Open Card Image Creator", id="card-image-creator-btn"),
+    dbc.Button("Create Image in Built-In Creator", id="card-image-creator-btn"),
     image_creator,
-    dcc.Upload("Select Card Image", id="card-image-upload"),
+    dcc.Upload(dbc.Button("Upload Custom Image"), id="card-image-upload"),
     dbc.Label("Card Image Filename"),
     dbc.Input(id="card-image-filename", type="text", placeholder="Insert Card Image Filename (Or Use Creator)"),
-    html.Hr(),
-
-    html.H2("Output"),
-    dbc.Label("Card Save Filename"),
-    dbc.Input(id="card-save-filename", type="text", placeholder="Insert Card Save Filename"),
-
+    dbc.Input(id="card-image-filename-dt", type="text", style={"display": "none"}),
+    dbc.Input(id="card-image-filename-from-json-dt", type="text", style={"display": "none"}),
+    dbc.Input(id="card-image-filename-from-json", type="text", style={"display": "none"}),
+    dbc.Input(id="card-image-filename-from-creators-dt", type="text", style={"display": "none"}),
+    dbc.Input(id="card-image-filename-from-creators", type="text", style={"display": "none"}),
 ])
 
 card_preview = html.Div([
@@ -171,23 +184,52 @@ def preview_card_callback(n_clicks):
 
 
 @app.callback(
-    Output("image-creator-modal", "is_open"),
+    [Output("image-creator-modal", "is_open"), Output("card-image-filename-from-creators", "value"), Output("card-image-filename-from-creators-dt", "value")],
     [Input("card-image-creator-btn", "n_clicks_timestamp"),
-     Input("image-creator-save-btn", "n_clicks_timestamp")],
-    State("image-creator-modal", "is_open"),
+     Input("image-creator-save-btn", "n_clicks_timestamp"),
+     Input("card-image-upload", "contents"),
+     Input("card-image-upload", "filename")],
+    [State("image-creator-modal", "is_open"),
+     State("image-creator-graph", "figure"),
+     State("card-image-filename-from-creators", "value"),
+     State("card-image-filename-from-creators-dt", "value")],
 )
-def image_creator_callback(open_btn_timestamp, save_btn_timestamp, is_open):
+def image_creator_callback(open_btn_timestamp, save_btn_timestamp, image_content, image_filename, is_open, figure, prev_filename, prev_datetime):
+    button_pressed = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    if button_pressed == "card-image-upload.filename" or button_pressed == "card-image-upload.contents":
+        image_save_name = str(uuid.uuid4())
+        new_filename = f"./card_maker_assets/images/{image_save_name}.png"
+        tmp_filename = image_save_name+image_filename
+        _, content_string = image_content.split(',')
+        with open(tmp_filename, "wb") as fp:
+            fp.write(base64.b64decode(content_string))
+        img = PIL.Image.open(tmp_filename)
+        os.remove(tmp_filename)
+        img.save(new_filename)
+        prev_filename = new_filename
+        prev_datetime = datetime.now().strftime(DT_FORMAT)
     if open_btn_timestamp is None:
         open_btn_timestamp = 0
     if save_btn_timestamp is None:
         save_btn_timestamp = 0
     if open_btn_timestamp > save_btn_timestamp:
-        return True
+        return True, prev_filename, prev_datetime
     elif save_btn_timestamp > open_btn_timestamp:
         # Save button pressed
-        print("save")
-        return False
-    return is_open
+        blank_img = PIL.Image.open("blank_image.png")
+        fig = go.Figure(figure)
+        fig.update_layout(autosize=False, width=blank_img.width, height=blank_img.height,
+                          margin={'l': 0, 'r': 0, 't': 0, 'b': 0})
+        fig.write_image("tmp.png", width=blank_img.width, height=blank_img.height, scale=5.0)
+        img = PIL.Image.open("tmp.png")
+        img = img.crop((878, 550, 878+1044, 550+655))
+        img = img.resize((blank_img.width, blank_img.height))
+        os.remove("tmp.png")
+        image_save_name = str(uuid.uuid4())
+        new_filename = f"./card_maker_assets/images/{image_save_name}.png"
+        img.save(new_filename)
+        return False, new_filename, datetime.now().strftime(DT_FORMAT)
+    return is_open, prev_filename, prev_datetime
 
 
 @app.callback(
@@ -203,18 +245,22 @@ def image_creator_search_callback(n_clicks, search_query):
 
 
 def _blur_and_quantize(img, blur=5, quantize=16):
+    blur = int(blur)
+    quantize = int(quantize)
     img = img.filter(ImageFilter.GaussianBlur(radius=blur))
     img = img.quantize(quantize)
     return img
 
 def _color_cluster(img, n_segments=100, compactness=1):
+    n_segments = int(n_segments)
+    compactness = int(compactness)
     image_array = np.asarray(img)
-    segments = slic(image_array, n_segments=100, compactness=1)
-    segment_ids = [x+1 for x in range(np.array(segments).max())]
+    segments = slic(image_array, n_segments=n_segments, compactness=compactness)
     img = Image.fromarray(label2rgb(segments, image_array, kind='avg', bg_label=0))
     return img
 
 def _triangulation(img, n=12, threshold=0.15):
+    n = int(n)
     image_array = np.asarray(img)
     gray_image = rgb2gray(image_array)
 
@@ -246,7 +292,15 @@ def _triangulation(img, n=12, threshold=0.15):
      Output("tweak-0-label", "children"),
      Output("tweak-1-label", "children"),
      Output("tweak-0-slider", "disabled"),
-     Output("tweak-1-slider", "disabled")],
+     Output("tweak-1-slider", "disabled"),
+     Output("tweak-0-slider", "min"),
+     Output("tweak-1-slider", "min"),
+     Output("tweak-0-slider", "max"),
+     Output("tweak-1-slider", "max"),
+     Output("tweak-0-slider", "step"),
+     Output("tweak-1-slider", "step"),
+     Output("tweak-0-slider", "value"),
+     Output("tweak-1-slider", "value")],
     [Input("image-creator-search-results", "active_index"),
      Input("image-creator-style-select", "value"),
      Input("image-creator-search-results", "items"),
@@ -254,7 +308,8 @@ def _triangulation(img, n=12, threshold=0.15):
      Input("tweak-1-slider", "value")]
 )
 def apply_image_style_callback(car_selection_index, style_selection, images, slider0, slider1):
-    # TODO: Finish wiring up sliders and autopopulating default values and ranges - use values appropriately
+    button_pressed = [p['prop_id'] for p in dash.callback_context.triggered][0]
+
     if images is None or len(images) == 0:
         raise PreventUpdate
     if car_selection_index is not None:
@@ -264,18 +319,32 @@ def apply_image_style_callback(car_selection_index, style_selection, images, sli
     img = PIL.Image.open(img_path)
     tweak0, tweak1 = "", ""
     tweak0_disabled, tweak1_disabled = True, True
+    min0, max0, step0 = 0, 1, 1
+    min1, max1, step1 = 0, 1, 1
     if style_selection == "1":
-        img = _triangulation(img)
+        if button_pressed == "image-creator-style-select.value":
+            slider0, slider1 = 12, 0.15
+        img = _triangulation(img, n=slider0, threshold=slider1)
         tweak0, tweak1 = "N", "Threshold"
         tweak0_disabled, tweak1_disabled = False, False
+        min0, max0, step0 = 0, 50, 1
+        min1, max1, step1 = 0, 1, 0.05
     elif style_selection == "2":
-        img = _blur_and_quantize(img)
+        if button_pressed == "image-creator-style-select.value":
+            slider0, slider1 = 5, 16
+        img = _blur_and_quantize(img, blur=slider0, quantize=slider1)
         tweak0, tweak1 = "Blur Size", "Quantize Levels"
         tweak0_disabled, tweak1_disabled = False, False
+        min0, max0, step0 = 1, 20, 1
+        min1, max1, step1 = 1, 127, 2
     elif style_selection == "3":
-        img = _color_cluster(img)
+        if button_pressed == "image-creator-style-select.value":
+            slider0, slider1 = 100, 1
+        img = _color_cluster(img, n_segments=slider0, compactness=slider1)
         tweak0, tweak1 = "N Segments", "Compactness"
         tweak0_disabled, tweak1_disabled = False, False
+        min0, max0, step0 = 1, 500, 10
+        min1, max1, step1 = 1, 50, 1
     blank_img = PIL.Image.open("blank_image.png")
     if img.width > blank_img.width:
         proportion = img.width / blank_img.width
@@ -306,7 +375,94 @@ def apply_image_style_callback(car_selection_index, style_selection, images, sli
     fig.update_layout(coloraxis_showscale=False)
     fig.update_xaxes(showticklabels=False)
     fig.update_yaxes(showticklabels=False)
-    return fig, tweak0, tweak1, tweak0_disabled, tweak1_disabled
+    return fig, tweak0, tweak1, tweak0_disabled, tweak1_disabled, min0, min1, max0, max1, step0, step1, slider0, slider1
+
+save_load_state_fields = [
+    ("card-name", "value"),
+    ("card-description", "value"),
+    ("card-fun-fact", "value"),
+    ("card-level", "value"),
+    ("card-cost", "value"),
+    ("card-player-reward", "value"),
+    ("card-target-reward", "value"),
+    ("card-is-multitarget", "value"),
+    ("card-type", "value"),
+    ("texture-select", "active_index"),
+    ("card-image-filename-from-json", "value"),
+    ("card-image-filename-from-json-dt", "value")
+]
+
+@app.callback(
+    Output("card-image-filename", "value"),
+    [Input("card-image-filename-from-json", "value"), Input("card-image-filename-from-creators", "value")],
+    [State("card-image-filename-from-json-dt", "value"), State("card-image-filename-from-creators-dt", "value"), State("card-image-filename-dt", "value")],
+)
+def sync_image_filenames(from_json, from_creators, from_json_dt, from_creators_dt, original_dt):
+    if from_creators_dt is None:
+        from_creators_dt = datetime(1970, 1, 1, 0, 0, 0, 0)
+    else:
+        from_creators_dt = datetime.strptime(from_creators_dt, DT_FORMAT)
+    if from_json_dt is None:
+        from_json_dt = datetime(1970, 1, 1, 0, 0, 0, 0)
+    else:
+        from_json_dt = datetime.strptime(from_json_dt, DT_FORMAT)
+    if original_dt is None:
+        original_dt = datetime(1970, 1, 1, 0, 0, 0, 0)
+    else:
+        original_dt = datetime.strptime(original_dt, DT_FORMAT)
+    
+    max_val = max([from_creators_dt, from_json_dt, original_dt])
+    ret_val = None
+    if max_val == original_dt:
+        ret_val = None
+    if max_val == from_json_dt:
+        ret_val = from_json
+    if max_val == from_creators_dt:
+        ret_val = from_creators
+    if ret_val is None:
+        raise PreventUpdate()
+    else:
+        return ret_val
+
+@app.callback(
+    Output("card-image-filename-dt", "value"),
+    Input("card-image-filename", "value")
+)
+def card_image_manual_edit_timestamp(_):
+    return datetime.now().strftime(DT_FORMAT)
+
+@app.callback(
+    [Output("save-selection", "data"), Output("save-filename", "value")]+[Output(identifier, member) for identifier, member in save_load_state_fields],
+    [Input("open-card-upload", "filename"),
+     Input("open-card-upload", "contents"),
+     Input("save-card-btn", "n_clicks_timestamp")],
+    [State('save-filename', 'value')] + [State(identifier, member) for identifier, member in save_load_state_fields],
+    prevent_initial_call=True
+)
+def image_creator_search_callback(open_filename, open_contents, save_last_click, save_filename, *state_args):
+    button_pressed = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    if button_pressed == "save-card-btn.n_clicks_timestamp":
+        if save_filename is None:
+            raise PreventUpdate()
+        export_dict = {}
+        for idx, (identifier, _) in enumerate(save_load_state_fields):
+            export_dict[identifier] = state_args[idx]
+        with open(save_filename, "w") as fp:
+            json.dump(export_dict, fp)
+    else:
+        save_filename = open_filename
+        _, content_string = open_contents.split(',')
+        json_data = json.loads(base64.b64decode(content_string).decode("utf-8"))
+        state_args_replacement = []
+        for identifier, _ in save_load_state_fields:
+            state_args_replacement.append(json_data[identifier])
+    state_args = tuple(state_args_replacement)
+    return tuple([None, save_filename] + list(state_args))
+    raise PreventUpdate()
+    
+    return dcc.send_file(
+        "./dash_docs/assets/images/gallery/dash-community-components.png"
+    )
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", debug=True, port=8051)

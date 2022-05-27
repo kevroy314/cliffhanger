@@ -1,0 +1,15 @@
+{
+    "card-cost": 100,
+    "card-description": "Make the target of this card get you a drink of your choice.",
+    "card-fun-fact": "The Swedish word \"hovm\u00e4stare\" loosely translates to \"butler\", but was original the title reserved for the head of finance of a kindom",
+    "card-image-filename-from-json": "./card_maker_assets/images/3a423ee8-ff5c-412d-8112-47ac96d78578.png",
+    "card-image-filename-from-json-dt": "2022-05-26 23:09:08.496418",
+    "card-is-multitarget": 0,
+    "card-level": 1,
+    "card-name": "The Butler",
+    "card-player-reward": 50,
+    "card-target-reward": 50,
+    "card-type": "General",
+    "card_image_filename": "./card_maker_assets/images/c8aec776-1659-4f2e-8ea5-dfc33c611fcb.png",
+    "texture-select": "./card_maker_assets/textures/461223183.jpg"
+}

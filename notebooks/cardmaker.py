@@ -87,13 +87,19 @@ def _apply_alpha(img):
     return img
 
 
-def _render_card_to_png(c, width=600, height=800, root_texture_asset_path='./card_maker_assets/textures', show=True, save_path=None):
-    texture_path = os.path.join(root_texture_asset_path, c['texture'])
+def _render_card_to_png(c, width=600, height=800, root_texture_asset_path='./card_maker_assets/textures', show=True, save_path=None, prepend_paths=True):
+    print(os.listdir())
+    texture_path = c['texture']
+    if prepend_paths:
+        texture_path = os.path.join(root_texture_asset_path, c['texture'])
     img = _get_tiled_texture(texture_path, width, height)
     border_color = img.resize((1, 1)).getpixel((0, 0))
     font_color = (0, 0, 0) if sum([x * s for x, s in zip(border_color, [0.299, 0.587, 0.114])]) <= 0.5 else (255, 255, 255)
     img = _draw_borders(img, color=border_color)
-    img = _apply_image_to_background(img, os.path.join('./card_maker_assets/images', c['image']), pad_top=60, truncate_height=350)
+    image_path = c['image']
+    if prepend_paths:
+        image_path = os.path.join('./card_maker_assets/images', c['image'])
+    img = _apply_image_to_background(img, image_path, pad_top=60, truncate_height=350)
     img = _draw_text(img, font_color, c)
     img = _apply_alpha(img)
     # TODO: Add reward if present

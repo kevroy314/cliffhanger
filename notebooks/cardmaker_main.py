@@ -1,3 +1,4 @@
+from re import L
 from distutils.command.upload import upload
 from itsdangerous import base64_decode
 from tokenize import blank_re
@@ -25,8 +26,8 @@ import numpy as np
 
 app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.SLATE], assets_folder="./card_maker_assets")
 
-texture_path = 'card_maker_assets/textures'
-texture_images, texture_paths = cardmaker.load_images_as_b64("card_maker_assets/textures", include_paths=True)
+texture_path = './card_maker_assets/textures'
+texture_images, texture_paths = cardmaker.load_images_as_b64(texture_path, include_paths=True)
 DT_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 image_creator = dbc.Modal(
@@ -69,6 +70,17 @@ image_creator = dbc.Modal(
     id="image-creator-modal",
     fullscreen=True,
 )
+
+card_type_options = [
+    {"label": "General", "value": "0"},
+    {"label": "Buff", "value": "1"},
+    {"label": "Attack", "value": "2"},
+    {"label": "Debuff", "value": "3"},
+]
+
+texture_items = [
+    {"key": meta, "src": image} for image, meta in zip(texture_images, texture_paths)
+]
 
 main_layout = html.Div([
     html.H1("Cardmaker"),
@@ -115,19 +127,13 @@ main_layout = html.Div([
     dbc.Select(
         id="card-type",
         value="0",
-        options=[
-            {"label": "General", "value": "0"},
-            {"label": "Buff", "value": "1"},
-            {"label": "Attack", "value": "2"},
-            {"label": "Debuff", "value": "3"},
-        ],
+        options=card_type_options,
     ),
     html.Label("Background Texture"),
     dbc.Carousel(
         id="texture-select",
-        items=[
-            {"key": meta, "src": image} for image, meta in zip(texture_images, texture_paths)
-        ],
+        items=texture_items,
+        active_index=0,
         controls=True,
         indicators=True,
         style={"width": "10vw"}
@@ -164,21 +170,38 @@ app.layout = dbc.Row([
     dbc.Col(width=1),
 ], style={"width": "99vw"})
 
-# TODO: google image search
-# TODO: image stylization
-# TODO: card preview
+
+save_load_state_fields = [
+    ("card-name", "value"),
+    ("card-description", "value"),
+    ("card-fun-fact", "value"),
+    ("card-level", "value"),
+    ("card-cost", "value"),
+    ("card-player-reward", "value"),
+    ("card-target-reward", "value"),
+    ("card-is-multitarget", "value"),
+    ("card-type", "value"),
+    ("texture-select", "active_index"),
+    ("card-image-filename-from-json", "value"),
+    ("card-image-filename-from-json-dt", "value")
+]
+
+# TODO: card save forces page refresh
 # TODO: card save config/assets
 # TODO: card type configurator + type texture/color mapping
-# Define callback to update graph
 @app.callback(
     Output('card-preview-img', 'src'),
-    [Input("card-preview-btn", "n_clicks")]
+    [Input("card-preview-btn", "n_clicks")],
+    [State('card-image-filename', 'value')] + [State(identifier, member) for identifier, member in save_load_state_fields]
 )
-def preview_card_callback(n_clicks):
+def preview_card_callback(n_clicks, card_image_filename, *state_args):
+    card = transform_state_args_to_dict(card_image_filename, state_args)
+    transformed_card = {}
+    for key in card:
+        if "json" not in key:
+            transformed_card[key.replace('card-', '').replace("-select", "").replace("card_", "").replace("_filename", "")] = card[key]
     if n_clicks != None:
-        with open("./card_maker_assets/data/hans.json", "r", encoding="utf-8") as fp:
-            card = json.load(fp)
-            card_src = cardmaker._render_card_to_png(card, show=False, save_path=None)
+        card_src = cardmaker._render_card_to_png(transformed_card, show=False, save_path=None, prepend_paths=False)
         return card_src
     return ""
 
@@ -377,20 +400,6 @@ def apply_image_style_callback(car_selection_index, style_selection, images, sli
     fig.update_yaxes(showticklabels=False)
     return fig, tweak0, tweak1, tweak0_disabled, tweak1_disabled, min0, min1, max0, max1, step0, step1, slider0, slider1
 
-save_load_state_fields = [
-    ("card-name", "value"),
-    ("card-description", "value"),
-    ("card-fun-fact", "value"),
-    ("card-level", "value"),
-    ("card-cost", "value"),
-    ("card-player-reward", "value"),
-    ("card-target-reward", "value"),
-    ("card-is-multitarget", "value"),
-    ("card-type", "value"),
-    ("texture-select", "active_index"),
-    ("card-image-filename-from-json", "value"),
-    ("card-image-filename-from-json-dt", "value")
-]
 
 @app.callback(
     Output("card-image-filename", "value"),
@@ -431,32 +440,56 @@ def sync_image_filenames(from_json, from_creators, from_json_dt, from_creators_d
 def card_image_manual_edit_timestamp(_):
     return datetime.now().strftime(DT_FORMAT)
 
+def transform_state_args_to_dict(card_image_filename, state_args):
+    export_dict = {}
+    for idx, (identifier, _) in enumerate(save_load_state_fields):
+        export_dict[identifier] = state_args[idx]
+    export_dict['card-is-multitarget'] = int(export_dict['card-is-multitarget'] == [0])
+    for option in card_type_options:
+        if option["value"] == export_dict['card-type']:
+            export_dict['card-type'] = option["label"]
+    export_dict['texture-select'] = texture_items[export_dict['texture-select']]['key']
+    export_dict['card_image_filename'] = card_image_filename
+    return export_dict
+
+def transform_dict_to_state_args(card_dict):
+    card_dict['card-is-multitarget'] = [0] if card_dict['card-is-multitarget'] else []
+    for option in card_type_options:
+        if option["label"] == card_dict['card-type']:
+            card_dict['card-type'] = option["value"]
+    for idx, ti in enumerate(texture_items):
+        if ti['key'] == card_dict['texture-select']:
+            card_dict['texture-select'] = idx
+    card_dict['card-image-filename-from-json'] = card_dict['card_image_filename']
+    card_dict['card-image-filename-from-json-dt'] = datetime.now().strftime(DT_FORMAT)
+    state_args_replacement = []
+    for identifier, _ in save_load_state_fields:
+        state_args_replacement.append(card_dict[identifier])
+        state_args = tuple(state_args_replacement)    
+
+    return state_args
+
 @app.callback(
     [Output("save-selection", "data"), Output("save-filename", "value")]+[Output(identifier, member) for identifier, member in save_load_state_fields],
     [Input("open-card-upload", "filename"),
      Input("open-card-upload", "contents"),
      Input("save-card-btn", "n_clicks_timestamp")],
-    [State('save-filename', 'value')] + [State(identifier, member) for identifier, member in save_load_state_fields],
+    [State('save-filename', 'value'), State('card-image-filename', 'value')] + [State(identifier, member) for identifier, member in save_load_state_fields],
     prevent_initial_call=True
 )
-def image_creator_search_callback(open_filename, open_contents, save_last_click, save_filename, *state_args):
+def image_creator_search_callback(open_filename, open_contents, save_last_click, save_filename, card_image_filename, *state_args):
     button_pressed = [p['prop_id'] for p in dash.callback_context.triggered][0]
     if button_pressed == "save-card-btn.n_clicks_timestamp":
         if save_filename is None:
             raise PreventUpdate()
-        export_dict = {}
-        for idx, (identifier, _) in enumerate(save_load_state_fields):
-            export_dict[identifier] = state_args[idx]
+        export_dict = transform_state_args_to_dict(card_image_filename, state_args)
         with open(save_filename, "w") as fp:
-            json.dump(export_dict, fp)
+            json.dump(export_dict, fp, indent=4, sort_keys=True)
     else:
         save_filename = open_filename
         _, content_string = open_contents.split(',')
         json_data = json.loads(base64.b64decode(content_string).decode("utf-8"))
-        state_args_replacement = []
-        for identifier, _ in save_load_state_fields:
-            state_args_replacement.append(json_data[identifier])
-    state_args = tuple(state_args_replacement)
+        state_args = transform_dict_to_state_args(json_data)
     return tuple([None, save_filename] + list(state_args))
     raise PreventUpdate()
     

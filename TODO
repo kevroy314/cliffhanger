@@ -10,3 +10,6 @@ add logic for card buttons
 add betting ui
 add logic for betting
 add ability to "join" a bet defensively
+
+add https://levelup.gitconnected.com/advanced-python-dataclasses-6a1e53bc4d8d
+add https://marketplace.visualstudio.com/items?itemName=alexcvzz.vscode-sqlite https://marketplace.visualstudio.com/items?itemName=qwtel.sqlite-viewer https://realpython.com/python-sqlite-sqlalchemy/#the-model

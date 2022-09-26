@@ -1,6 +1,6 @@
 """Logging packages."""
 import logging
-
+import os
 
 def initialize_logging(log_filename):
     """Initialize logging to file.
@@ -8,6 +8,10 @@ def initialize_logging(log_filename):
     Args:
         log_filename (str): the filename to log to
     """
+    try:
+        os.makedirs(os.path.dirname(log_filename))
+    except FileExistsError:
+        pass
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
 

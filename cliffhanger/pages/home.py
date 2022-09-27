@@ -16,10 +16,7 @@ def layout_function(**kwargs):  # pylint: disable=unused-argument
                     html.Ul([
                         html.Li([html.Span("Rule 1: ", className="rule-item"), "Keep it fun!"]),
                         html.Li([html.Span("Rule 2: ", className="rule-item"), "Enter your BAC once per hour"]),
-                        html.Li([html.Span("Rule 3: ", className="rule-item"), "Wait 15min after your last sip of alcohol before blowing (hint: use the timer for bonus points)"]),
-                        html.Li([html.Span("Rule 4: ", className="rule-item"), "Use points earned from entering your data to place bets on your BAC, other player BACs, or the party average BAC each hour (hint: it's not about drinking the most, but knowing the most)"]),
-                        html.Li([html.Span("Rule 5: ", className="rule-item"), "Spend your points on cards to play on other players to impact their next BAC blow"]),
-                        html.Li([html.Span("Rule 6: ", className="rule-item"), "You can only place bets, play cards, and buy cards if you've resolved all the cards played on you."]),
+                        html.Li([html.Span("Rule 3: ", className="rule-item"), "Wait 15min after your last sip of alcohol before blowing (hint: use the timer)"]),
                     ])),
                 dbc.ModalFooter(
                     dbc.Button("Close", id="close-rules", className="ms-auto", n_clicks=0)

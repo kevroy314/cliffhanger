@@ -20,7 +20,7 @@ def create_navbar(pages):
 
     navbar = dbc.NavbarSimple(
         children=dropdown_options,
-        brand="Cliffhanger", brand_href="/", brand_style={"margin-left": "10px"}, sticky="top", color="dark", dark=True,
+        brand="Prophecy Portal", brand_href="/", brand_style={"margin-left": "10px"}, sticky="top", color="dark", dark=True,
     )
 
     return navbar

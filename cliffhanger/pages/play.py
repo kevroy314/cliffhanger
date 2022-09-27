@@ -7,14 +7,25 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+from dash import callback_context
 
 from cliffhanger.database.session import Session
 from cliffhanger.database.user import User
-from cliffhanger.pages.bets import (bets_callbacks, bets_session_components,
-                                    bets_user_components)
-from cliffhanger.pages.cards import cards_callbacks, cards_user_components
 from cliffhanger.pages.page import Page
 from cliffhanger.utils.formats import DATETIME_STRING_FORMAT
+
+def get_coin_modal():
+    return dbc.Modal([
+            dbc.ModalHeader(dbc.ModalTitle("Get 100 Coin!")),
+            dbc.ModalBody([
+                html.Img(src='/assets/images/coin.png'),
+            ]),
+            dbc.ModalFooter(
+                dbc.Button("Got it!", id="close-coin-modal", className="ms-auto", n_clicks=0)
+            )],
+            id="coin-modal",
+            is_open=False,
+        )
 
 
 def generate_user_table(session):
@@ -30,8 +41,7 @@ def generate_user_table(session):
         html.Thead(html.Tr([
             html.Th("User", className="party-table-header-item"),
             html.Th("Last BAC", className="party-table-header-item"),
-            html.Th("Last Updated", className="party-table-header-item"),
-            html.Th("Points", className="party-table-header-item")
+            html.Th("Last Updated", className="party-table-header-item")
         ]))
     ]
 
@@ -41,8 +51,7 @@ def generate_user_table(session):
         row = html.Tr([
             html.Td(user.username),
             html.Td(user.latest_bac),
-            html.Td(user.last_update),
-            html.Td(str(user.points))
+            html.Td(user.last_update)
         ])
         rows.append(row)
 
@@ -57,6 +66,7 @@ def session_page(**kwargs):
     session = Session.get_session(session_id)
     most_recent_user = kwargs['user-preferences-data']['most_recent_user']
     layout = html.Div([
+        dcc.Interval(id="data-reloader", interval=5000),
         dbc.Row(
             dbc.Col([
                 dbc.Row(
@@ -67,14 +77,13 @@ def session_page(**kwargs):
                     html.H4('Invite more people!', className="page-title"),
                     justify="center"
                 ),
-                dbc.Row(html.Img(src=f"/assets/qrcodes/{session_id}.png", className="session-id-qr"),
-                        justify="center"),
+                dbc.Row([
+                    html.Img(src=f"/assets/qrcodes/{session_id}.png", className="session-id-qr"),
+                ], justify="center"),
                 dbc.Button(html.I(className="fa fa-solid fa-download"), id="download-session-snapshop-btn", className="data-download-button", color="secondary", outline=True),
                 dcc.Download(id="download-controller"),
-                generate_user_table(session),
-                bets_session_components(session_id),
-                dcc.Graph(figure=session.create_session_graph()),
-                dcc.Graph(figure=session.create_session_score_graph()),
+                html.Div(generate_user_table(session), id="group-table"),
+                dcc.Graph(figure=session.create_session_graph(), id="group-graph"),
                 dbc.Row(
                     dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href=f"/play/{session_id}/{most_recent_user}"),
                     justify="center"
@@ -104,7 +113,7 @@ def user_page(**kwargs):
         return error_page(**kwargs)  # Unauthorized
 
     layout = html.Div([
-        html.Script(src="/assets/components/countdown/countdown.js"),
+        get_coin_modal(),
         dbc.Row(
             dbc.Col([
                 dbc.Row(
@@ -112,15 +121,7 @@ def user_page(**kwargs):
                     justify="center"
                 ),
                 dbc.Row(
-                    [html.Sub(f'You are in session {session_id}.', className="subtitle"), html.Br()],
-                    justify="center"
-                ),
-                dbc.Row(
-                    [html.Sub(f'You currently have {user.points} points.', className="subtitle", id="points-display"), html.Br()],
-                    justify="center"
-                ),
-                dbc.Row(
-                    html.Div(id="countdown-timer", className="countdown-timer"),
+                    [html.Sub(f'You are in session {session_id}.', className="subtitle")],
                     justify="center"
                 ),
                 dbc.Row(
@@ -147,8 +148,6 @@ def user_page(**kwargs):
                     dbc.Button("Submit BAC", color="primary", className="me-1 action-btn", id="submit-bac"),
                     justify="center"
                 ),
-                bets_user_components(session_id, username),
-                cards_user_components(session_id, username),
                 dbc.Row(
                     dbc.Button("Go to Party Page", color="secondary", outline=True, className="me-1 action-btn", href=f"/play/{session_id}"),
                     justify="center"
@@ -205,31 +204,40 @@ def layout_function(**kwargs):
         return error_page(**kwargs)
 
 
-def on_submit_new_bac(n_clicks, bac, session_id, username, data, javascript_data, drink_description_checklist):
+def on_submit_new_bac(n_clicks, n_clicks_close_coin_modal, bac, session_id, username, data, drink_description_checklist):
     """Respond to submissions of new BAC values on callback."""
     user = User(session_id, username, create_if_not_exist=False)
-    if n_clicks is not None:
-        timer_value = None
-        if "timeLeft" in javascript_data:
-            timer_value = javascript_data['timeLeft']
-        user = User(session_id, username, create_if_not_exist=False)
-        secret_key = session_id + "_" + username + "_secret"
-        if secret_key not in data:
-            graph = user.get_user_graph()
-            return (["You are not authorized to do this."], graph, f'You currently have {user.points} points.')
-        if data[secret_key] != user.user_secret:
-            graph = user.get_user_graph()
-            return (["You are not authorized to do this."], graph, f'You currently have {user.points} points.')
-        now = datetime.now()
-        user.update_bac(bac, timer_value, drink_description_checklist)
+    if callback_context.triggered[0]['prop_id'] == '.':
         graph = user.get_user_graph()
-        return (["Submitted Successfully!", html.Br(), f"({now.strftime(DATETIME_STRING_FORMAT)})"], graph, f'You currently have {user.points} points.')
-    else:
+        return ("", graph, False)
+    if callback_context.triggered[0]['prop_id'] == 'submit-bac.n_clicks':
+        if n_clicks is not None:
+            secret_key = session_id + "_" + username + "_secret"
+            if secret_key not in data:
+                graph = user.get_user_graph()
+                return (["You are not authorized to do this."], graph, False)
+            if data[secret_key] != user.user_secret:
+                graph = user.get_user_graph()
+                return (["You are not authorized to do this."], graph, False)
+            now = datetime.now()
+            get_coins, time_left_in_minutes_to_next_coin = user.update_bac(bac, drink_description_checklist)
+            graph = user.get_user_graph()
+            if get_coins:
+                return (["Submitted Successfully!", html.Br(), f"({now.strftime(DATETIME_STRING_FORMAT)})"], graph, True)
+            else:
+                return (["Submitted Successfully!", html.Br(), f"You submitted early. Submit again in {time_left_in_minutes_to_next_coin:.2f} minutes to get more coins.", html.Br(), f"({now.strftime(DATETIME_STRING_FORMAT)})"], graph, False)
+        else:
+            graph = user.get_user_graph()
+            return ("", graph, False)
+    elif callback_context.triggered[0]['prop_id'] == 'close-coin-modal.n_clicks':
         graph = user.get_user_graph()
-        return ("", graph, f'You currently have {user.points} points.')
+        if n_clicks_close_coin_modal == 0:
+            return ("", graph, True)
+        else:
+            return ("", graph, False)
 
 
-def download_session_snapshop(n_clicks, data):
+def download_session_snapshot(n_clicks, data):
     """Begin a download of the current session data when requested."""
     if n_clicks is not None:
         session_id = data['most_recent_session']
@@ -239,10 +247,23 @@ def download_session_snapshop(n_clicks, data):
     else:
         raise PreventUpdate()
 
+def close_coin_modal(n_clicks):
+    """Close the coins modal on click."""
+    if n_clicks == 0:
+        return True
+    else:
+        return False
+
+def update_session_data(n_intervals, session_id):
+    logging.info("Updating session data display")
+    session = Session(session_id)
+    return generate_user_table(session), session.create_session_graph()
+
 
 callbacks = [
-    [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("points-display", "children")], Input("submit-bac", "n_clicks"), [State("input-bac", "value"), State("play-session-id", "value"), State("play-username", "value"), State("user-preferences", "data"), State("javascript-variables", "data"), State("drink-description-checklist", "value")]], on_submit_new_bac],
-    [[Output("download-controller", "data"), [Input("download-session-snapshop-btn", "n_clicks")], [State("user-preferences", "data")]], download_session_snapshop],
-] + bets_callbacks + cards_callbacks
+    [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("coin-modal", "is_open")], [Input("submit-bac", "n_clicks"), Input("close-coin-modal", "n_clicks")], [State("input-bac", "value"), State("play-session-id", "value"), State("play-username", "value"), State("user-preferences", "data"), State("drink-description-checklist", "value")]], on_submit_new_bac],
+    [[Output("download-controller", "data"), [Input("download-session-snapshop-btn", "n_clicks")], [State("user-preferences", "data")]], download_session_snapshot],
+    [[[Output("group-table", "children"), Output("group-graph", "figure")], [Input("data-reloader", "n_intervals")], [State("play-session-id", "value")]], update_session_data],
+]
 
 page = Page('/play', 'Play', layout_function, callbacks, False)

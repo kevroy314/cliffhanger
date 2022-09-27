@@ -5,7 +5,6 @@ from dash import dcc, html
 from dash.dependencies import Input, Output, State
 
 import cliffhanger.utils.log  # pylint: disable=unused-import
-import cliffhanger.session_monitor  # pylint: disable=unused-import
 from cliffhanger.pages import pages
 from cliffhanger.components.navbar import create_navbar
 
@@ -13,19 +12,17 @@ app = dash.Dash(__name__,
                 suppress_callback_exceptions=True,
                 external_stylesheets=[
                     dbc.themes.LUX,
-                    "/assets/css/cliffhanger.css",
+                    "/assets/css/main.css",
                     "/assets/components/countdown/countdown.css",
                     "https://use.fontawesome.com/releases/v6.1.1/css/all.css"
                 ],
                 meta_tags=[
                     {"name": "viewport", "content": "width=device-width, initial-scale=1"}
                 ])
-app.title = "Cliffhanger"
+app.title = "Prophecy Portal"
 server = app.server
 
 app.layout = html.Div([
-    dcc.Interval(id="javascript-variable-crawler", interval=250),
-    dcc.Store(id='javascript-variables', storage_type='memory'),
     dcc.Store(id='user-preferences', storage_type='local'),
     dcc.Location(id='url', refresh=False),
     create_navbar(pages),
@@ -38,20 +35,6 @@ for _page in pages:
     for callback in _page.callbacks:
         ios_definitions, function_definition = callback
         app.callback(*ios_definitions)(function_definition)
-
-# get javascript variables and store app-wide
-app.clientside_callback(
-    """
-    function(){
-        if (typeof variable !== 'undefined')
-            return {'timeLeft': timeLeft};
-        else
-            return {'timeLeft': 900};
-    }
-    """,
-    Output('javascript-variables', 'data'),
-    [Input('javascript-variable-crawler', 'n_intervals')],
-)
 
 
 @app.callback(Output('page-content', 'children'),

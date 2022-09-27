@@ -20,8 +20,6 @@ drinks_color_lut = {
     "Liquor (Shots)": "#2364AA"
 }
 
-PARTY_BAC_FAILURE_THRESHOLD = 0.08
-
 if not os.path.exists(DATA_LOCATION):
     os.mkdir(DATA_LOCATION)
 if not os.path.exists(LOG_LOCATION):

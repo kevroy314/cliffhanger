@@ -7,7 +7,6 @@ from dash.dependencies import Input, Output, State
 import cliffhanger.utils.log  # pylint: disable=unused-import
 from cliffhanger.pages import pages
 from cliffhanger.components.navbar import create_navbar
-import cliffhanger.sessionmonitor
 
 app = dash.Dash(__name__,
                 suppress_callback_exceptions=True,

@@ -65,41 +65,6 @@ def session_page(**kwargs):
     session_id = kwargs['path_meta'][0]
     session = Session.get_session(session_id)
     most_recent_user = kwargs['user-preferences-data']['most_recent_user']
-    try:
-        prev_party_average_bac = f"{float(session.get_stat('prev_party_average')):.3}"
-    except KeyError:
-        prev_party_average_bac = "None Yet"
-    try:
-        party_average_bac = f"{float(session.get_stat('party_average')):.3}"
-    except KeyError:
-        party_average_bac = "None Yet"
-    try:
-        prev_bet = f"{float(session.get_stat('prev_party_next_bet')):.3}"
-    except KeyError:
-        prev_bet = "None Yet"
-    try:
-        next_bet = f"{float(session.get_stat('party_next_bet')):.3}"
-    except KeyError:
-        next_bet = "None Yet"
-    next_bet_evalution_time_left = 60 - datetime.now().time().minute
-    party_average_card = dbc.Card([
-            dbc.CardBody([
-                    html.H4("Party Avg. BAC", className="card-title center-text"),
-                    html.P(f"{party_average_bac}", className="card-text large-number-text center-text", id="party-average-card"),
-                ]),
-            dbc.CardFooter([f"Next bet in {next_bet_evalution_time_left} minutes.", html.Br(), 
-                            f"Last Avg. BAC was {prev_party_average_bac}"], className="center-text")],
-        style={"width": "18rem"},
-    )
-    next_bet_card = dbc.Card([
-            dbc.CardBody([
-                    html.H4("Next Bet BAC", className="card-title center-text"),
-                    html.P(f"{next_bet}", className="card-text large-number-text center-text", id="next-bet-card"),
-                ]),
-            dbc.CardFooter([f"Next bet in {next_bet_evalution_time_left} minutes.", html.Br(), 
-                            f"Last Bet BAC was {prev_bet}"], className="center-text")],
-        style={"width": "18rem"},
-    )
     layout = html.Div([
         dbc.Row(
             dbc.Col([
@@ -112,9 +77,7 @@ def session_page(**kwargs):
                     justify="center"
                 ),
                 dbc.Row([
-                    next_bet_card,
                     html.Img(src=f"/assets/qrcodes/{session_id}.png", className="session-id-qr"),
-                    party_average_card,
                 ], justify="center"),
                 dbc.Button(html.I(className="fa fa-solid fa-download"), id="download-session-snapshop-btn", className="data-download-button", color="secondary", outline=True),
                 dcc.Download(id="download-controller"),

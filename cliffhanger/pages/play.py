@@ -66,6 +66,7 @@ def session_page(**kwargs):
     session = Session.get_session(session_id)
     most_recent_user = kwargs['user-preferences-data']['most_recent_user']
     layout = html.Div([
+        dcc.Interval(id="data-reloader", interval=5000),
         dbc.Row(
             dbc.Col([
                 dbc.Row(
@@ -81,8 +82,8 @@ def session_page(**kwargs):
                 ], justify="center"),
                 dbc.Button(html.I(className="fa fa-solid fa-download"), id="download-session-snapshop-btn", className="data-download-button", color="secondary", outline=True),
                 dcc.Download(id="download-controller"),
-                generate_user_table(session),
-                dcc.Graph(figure=session.create_session_graph()),
+                html.Div(generate_user_table(session), id="group-table"),
+                dcc.Graph(figure=session.create_session_graph(), id="group-graph"),
                 dbc.Row(
                     dbc.Button("Go to My User Page", color="primary", className="me-1 action-btn", href=f"/play/{session_id}/{most_recent_user}"),
                     justify="center"
@@ -253,10 +254,16 @@ def close_coin_modal(n_clicks):
     else:
         return False
 
+def update_session_data(n_intervals, session_id):
+    logging.info("Updating session data display")
+    session = Session(session_id)
+    return generate_user_table(session), session.create_session_graph()
+
 
 callbacks = [
     [[[Output("confirmation-text", "children"), Output("user-graph", "figure"), Output("coin-modal", "is_open")], [Input("submit-bac", "n_clicks"), Input("close-coin-modal", "n_clicks")], [State("input-bac", "value"), State("play-session-id", "value"), State("play-username", "value"), State("user-preferences", "data"), State("drink-description-checklist", "value")]], on_submit_new_bac],
     [[Output("download-controller", "data"), [Input("download-session-snapshop-btn", "n_clicks")], [State("user-preferences", "data")]], download_session_snapshot],
+    [[[Output("group-table", "children"), Output("group-graph", "figure")], [Input("data-reloader", "n_intervals")], [State("play-session-id", "value")]], update_session_data],
 ]
 
 page = Page('/play', 'Play', layout_function, callbacks, False)

@@ -10,8 +10,7 @@ import plotly.graph_objects as go
 from sqlitedict import SqliteDict
 
 from cliffhanger.database.user import User
-from cliffhanger.utils.globals import (DATA_LOCATION, drinks_cat_lut,
-                                       PARTY_BAC_FAILURE_THRESHOLD)
+from cliffhanger.utils.globals import (DATA_LOCATION, drinks_cat_lut)
 
 
 class Session():
@@ -46,7 +45,7 @@ class Session():
         else:
             self.stats = self.session_db['stats']
 
-    def set_stats(self, stat_key, stat_value):
+    def set_stat(self, stat_key, stat_value):
         """Set and persist a stat key.
 
         Args:
@@ -89,23 +88,19 @@ class Session():
     def extract_data_snapshot(self):
         """Get a snapshot of the current user data in this session.
 
-        Note: This does not include cards and bets.
-        TODO: Include cards and bets.
-
         Returns:
             pd.DataFrame: a Pandas DataFrame for this session's current state (and history)
         """
         event_data = []
         for username in list(self.users.keys()):
             user = User(self.session_id, username, create_if_not_exist=True)
-            for bac, dt, drinks, points in zip(user.bac_history,
+            for bac, dt, drinks in zip(user.bac_history,
                                                user.bac_history_datetimes,
-                                               user.drink_description_checklist_history,
-                                               user.points_history):
-                event_data.append({'user': username, 'dt': dt, "bac": bac, "drinks": [drinks_cat_lut[d] for d in drinks], "points": points})
+                                               user.drink_description_checklist_history):
+                event_data.append({'user': username, 'dt': dt, "bac": bac, "drinks": [drinks_cat_lut[d] for d in drinks]})
 
         df = pd.DataFrame(event_data)
-        columns = ['user', 'dt', 'bac', 'drinks', 'points']
+        columns = ['user', 'dt', 'bac', 'drinks']
         for c in columns:
             if c not in df.columns:
                 df[c] = []
@@ -129,51 +124,16 @@ class Session():
         mdf = mdf.fillna(method="ffill").fillna(method="bfill")
         mdf = mdf.mean(axis=1).reset_index()
         mdf.columns = ["Datetime", "Party Average"]
-        mdf['Threshold'] = PARTY_BAC_FAILURE_THRESHOLD
 
         df = df.rename({'dt': 'Datetime', 'bac': 'BAC', 'user': "User"}, axis=1)
         fig = px.line(df, x='Datetime', y='BAC', color='User')
         fig.update_layout(
             margin=dict(l=0, r=0, b=0, t=0),
-            legend=dict(
-                title="User",
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="left",
-                x=0
-            )
-        )
-        fig.add_trace(go.Scatter(x=mdf['Datetime'], y=mdf['Party Average'], name='Party Average',
-                                 line=dict(color='rgba(85, 111, 230, 0.5)', width=4, dash='dot'), mode='lines'))
-        fig.add_trace(go.Scatter(x=mdf['Datetime'], y=mdf['Threshold'], name='Failure Threshold',
-                                 line=dict(color='rgba(255, 25, 0, 0.2)', width=4, dash='dash'), mode='lines'))
-        return fig
-
-    def create_session_score_graph(self):
-        """Create a graph of the scores during the session.
-
-        Returns:
-            go.Figure: a graph for the scores during the session
-        """
-        df = self.extract_data_snapshot()
-
-        user_dfs = df.groupby('user')
-        mdf = pd.DataFrame()
-        mdf['dt'] = df['dt'].unique()
-        mdf = mdf.set_index('dt').sort_index()
-        for username, udf in user_dfs:
-            udf = udf.set_index("dt")
-            mdf[username + '_points'] = udf['points']
-        mdf = mdf.fillna(method="ffill").fillna(method="bfill")
-        mdf = mdf.mean(axis=1).reset_index()
-        mdf.columns = ["Datetime", "Party Average"]
-
-        df = df.rename({'dt': 'Datetime', 'points': 'Points', 'user': "User"}, axis=1)
-
-        fig = px.line(df, x='Datetime', y='Points', color='User')
-        fig.update_layout(
-            margin=dict(l=0, r=0, b=0, t=0),
+            xaxis=dict(title="Datetime"),
+            yaxis=dict(title="BAC"),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=300,
             legend=dict(
                 title="User",
                 orientation="h",

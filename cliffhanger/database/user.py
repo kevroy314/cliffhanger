@@ -10,7 +10,6 @@ import plotly.graph_objs as go
 
 from sqlitedict import SqliteDict
 
-from cliffhanger.point_rules import SUBMIT_NEW_BAC_POINTS, TIMER_USE_POINTS
 from cliffhanger.utils.formats import DATETIME_STRING_FORMAT
 from cliffhanger.utils.globals import (DATA_LOCATION, drinks_cat_lut,
                                        drinks_color_lut)
@@ -42,12 +41,10 @@ class User():
             self.bac_history = []
             self.bac_history_datetimes = []
             self.drink_description_checklist_history = []
+            self.last_coin_datetime = None
             self.latest_bac = "Undefined"
             self.last_update = datetime.now().strftime(DATETIME_STRING_FORMAT)
-            self.points = 0
-            self.points_history = []
             self.user_secret = str(uuid.uuid4())
-            self.bets = []
             self.user_db['user'] = self.serialize()
         else:
             self.load_from_serialized(self.user_db['user'])
@@ -59,42 +56,11 @@ class User():
             'bac_history': self.bac_history,
             'bac_history_datetimes': self.bac_history_datetimes,
             'drink_description_checklist_history': self.drink_description_checklist_history,
+            'last_coin_datetime': self.last_coin_datetime,
             'latest_bac': self.latest_bac,
             'last_update': self.last_update,
-            'points': self.points,
-            'points_history': self.points_history,
-            'user_secret': self.user_secret,
-            'bets': self.bets
+            'user_secret': self.user_secret
         }
-
-    def add_bet(self, bet):
-        """Add a bet to the user and persist it.
-
-        Args:
-            bet (cliffhanger.pages.bets.Bet): a Bet object
-        """
-        # TODO Only allow bets with sufficient currency
-        self.bets.append(bet)
-        self.user_db['user'] = self.serialize()
-
-    def resolve_bet_as_loss(self, bet):
-        """Resolve a bet for the user as a loss.
-
-        Args:
-            bet (cliffhanger.pages.bets.Bet): the bet to resolve for this user
-        """
-        # TODO
-        print(f"resolving bet {bet} as loss")
-
-    def resolve_bet_as_win(self, bet, pot_split):
-        """Resolve a bet for the user as a win.
-
-        Args:
-            bet (cliffhanger.pages.bets.Bet): the bet to resolve for this user
-            pot_split (int): the points coming from other users to be given straight to this user
-        """
-        # TODO
-        print(f"resolving bet {bet} as win plus pot split {pot_split}")
 
     def load_from_serialized(self, serialized_dict):
         """Load data from a serialized dictionary into THIS object.
@@ -105,17 +71,19 @@ class User():
         for key in serialized_dict:
             setattr(self, key, serialized_dict[key])
 
-    def update_bac(self, new_bac, timer_value=None, drink_description_checklist=None):
+    def update_bac(self, new_bac, drink_description_checklist=[]):
         """Update the BAC of this user. Note, points are applied in this function.
 
         Args:
             new_bac (float): the new BAC for the user
-            timer_value (float, optional): the value of the timer object on submission (for bonus points). Defaults to None.
+            timer_value (float, optional): the value of the timer object on submission. Defaults to None.
             drink_description_checklist (list, optional): the list of drink types the user had during the last period. Defaults to None.
         """
         now = datetime.now()
         self.bac_history.append(float(new_bac))
         self.bac_history_datetimes.append(now)
+        if self.last_coin_datetime is None:
+            self.last_coin_datetime = now
         self.drink_description_checklist_history.append(drink_description_checklist)
         self.latest_bac = str(new_bac)
         self.last_update = now.strftime(DATETIME_STRING_FORMAT)
@@ -135,12 +103,13 @@ class User():
         # award points for BAC entry if it is the first entry or the first entry in this hour
         if len(self.bac_history_datetimes) == 1 or \
                 is_in_same_hour(self.bac_history_datetimes[-2], self.bac_history_datetimes[-1]):
-            self.points += SUBMIT_NEW_BAC_POINTS
-            # If they used the timer and it's within 30 seconds of 0, bonus points!
-            if timer_value is not None and timer_value <= 30:
-                self.points += TIMER_USE_POINTS
-        self.points_history.append(self.points)
+            get_coins = True
+            time_left = 0
+        else:
+            get_coins = False
+            time_left = 60.0-((now - self.last_coin_datetime).total_seconds()/60.0)
         self.user_db['user'] = self.serialize()
+        return get_coins, time_left
 
     def get_user_graph(self, n_points=1000):
         """Get the graph of the users data.
@@ -156,7 +125,6 @@ class User():
             y = self.bac_history
             # Disregard first entry as it doesn't have a line segment
             cats = self.drink_description_checklist_history[1:]
-
             xx, yy, cc = [], [], []
             for idx, ((x0, x1), (y0, y1)) in enumerate(zip(zip(x[:-1], x[1:]), zip(y[:-1], y[1:]))):
                 points = int(n_points * ((x1 - x0) / (max(x) - min(x))))

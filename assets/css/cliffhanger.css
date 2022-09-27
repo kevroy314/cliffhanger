@@ -26,6 +26,7 @@ html, body {
 
 .subtitle {
   text-align: center;
+  padding-bottom: 20px;
 }
 
 .subtitle-tight {
@@ -89,6 +90,7 @@ html, body {
 
 .session-id-qr{
   width: 200px;
+  height: 100%;
 }
 
 .data-download-button{
@@ -111,4 +113,12 @@ html, body {
 
 .btn:disabled {
   opacity: 0.1;
+}
+
+.large-number-text {
+  font-size: 3em;
+}
+
+.center-text {
+  text-align: center;
 }

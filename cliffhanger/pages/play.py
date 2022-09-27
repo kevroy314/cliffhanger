@@ -18,7 +18,7 @@ def get_coin_modal():
     return dbc.Modal([
             dbc.ModalHeader(dbc.ModalTitle("Get 100 Coin!")),
             dbc.ModalBody([
-                html.Img(src='/assets/images/coin.png'),
+                html.Img(src='/assets/images/coin.png', className="coin-image"),
             ]),
             dbc.ModalFooter(
                 dbc.Button("Got it!", id="close-coin-modal", className="ms-auto", n_clicks=0)

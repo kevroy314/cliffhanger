@@ -40,6 +40,10 @@ html, body {
   margin-bottom: 25px;
 }
 
+.coin-image {
+  width: 100%;
+}
+
 .confirmation-text {
   font-size: 12px;
   text-align: center;
